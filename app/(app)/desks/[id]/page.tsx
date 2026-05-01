@@ -1,18 +1,47 @@
 import { notFound, redirect } from "next/navigation";
 import { and, eq, isNull } from "drizzle-orm";
 import { AgentOverlay } from "@/components/agent/AgentOverlay";
-import { GlassSurface } from "@/components/visual/GlassSurface";
+import { DeskCanvas } from "@/components/canvas/DeskCanvas";
 import { getCurrentUser } from "@/lib/auth/workspace";
 import { db } from "@/lib/db/client";
 import { resources, widgetInstances } from "@/lib/db/schema";
+import type { DeskWidget, WidgetLayout, WidgetType } from "@/lib/types";
 
 interface DeskPageProps {
   params: Promise<{ id: string }>;
 }
 
-interface WidgetProps {
-  name?: string;
-  type?: string;
+function asRecord(value: unknown): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return {};
+  return value as Record<string, unknown>;
+}
+
+function isWidgetType(value: unknown): value is WidgetType {
+  return (
+    value === "markdown" ||
+    value === "kanban" ||
+    value === "browser" ||
+    value === "code" ||
+    value === "chart" ||
+    value === "form" ||
+    value === "iframe"
+  );
+}
+
+function toNumber(value: unknown, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function parseLayout(value: unknown, index: number): WidgetLayout {
+  const layout = asRecord(value);
+  return {
+    x: toNumber(layout.x, 0),
+    y: toNumber(layout.y, index * 6),
+    w: toNumber(layout.w, 6),
+    h: toNumber(layout.h, 5),
+    ...(typeof layout.minW === "number" ? { minW: layout.minW } : {}),
+    ...(typeof layout.minH === "number" ? { minH: layout.minH } : {}),
+  };
 }
 
 export default async function DeskPage({ params }: DeskPageProps) {
@@ -41,6 +70,20 @@ export default async function DeskPage({ params }: DeskPageProps) {
     .from(widgetInstances)
     .where(eq(widgetInstances.deskId, desk.id));
 
+  const canvasWidgets: DeskWidget[] = widgets.map((widget, index) => {
+    const props = asRecord(widget.props);
+    const type = isWidgetType(props.type) ? props.type : "custom";
+    const name = typeof props.name === "string" ? props.name : "Widget";
+
+    return {
+      id: widget.id,
+      type,
+      name,
+      props,
+      layout: parseLayout(widget.layout, index),
+    };
+  });
+
   return (
     <div className="min-h-dvh px-4 pb-24 pt-5 md:pr-[420px]">
       <div className="mx-auto max-w-5xl">
@@ -51,32 +94,7 @@ export default async function DeskPage({ params }: DeskPageProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {widgets.length ? (
-            widgets.map((widget) => {
-              const props = widget.props as WidgetProps;
-              return (
-                <GlassSurface key={widget.id} className="min-h-36 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="truncate text-sm font-semibold text-[--color-foreground]">
-                      {props.name ?? "Widget"}
-                    </h2>
-                    <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-[--color-muted-foreground]">
-                      {props.type ?? "custom"}
-                    </span>
-                  </div>
-                  <pre className="mt-3 max-h-28 overflow-auto whitespace-pre-wrap break-words text-xs text-[--color-muted-foreground]">
-                    {JSON.stringify(widget.props, null, 2)}
-                  </pre>
-                </GlassSurface>
-              );
-            })
-          ) : (
-            <GlassSurface className="min-h-60 p-5 md:col-span-2">
-              <div className="h-full rounded-lg border border-dashed border-white/10 bg-white/[0.03]" />
-            </GlassSurface>
-          )}
-        </div>
+        <DeskCanvas deskId={desk.id} widgets={canvasWidgets} />
       </div>
 
       <AgentOverlay deskId={desk.id} />

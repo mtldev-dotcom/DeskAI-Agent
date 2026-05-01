@@ -36,7 +36,7 @@ Rule: **If it's not documented, it's not complete.**
 |---|---|---|
 | P1 | Foundation: NextAuth + Drizzle + workspaces + L0/L1/L2 + onboarding + Desks CRUD + glass shell | ⬜ pending |
 | P2 | Chat runtime: OpenRouter streaming + runAgent + prompt-builder + skills + memory + execution cards | ✅ complete |
-| P3 | Agent-built UI: widget canvas + builtin widgets + sandboxed iframe + agent tools | ⬜ pending |
+| P3 | Agent-built UI: widget canvas + builtin widgets + sandboxed iframe + agent tools | ✅ complete |
 | P4 | Time travel + sharing: resource_versions + diff/rollback + ZIP bundle + encrypted shares | ⬜ pending |
 | P5 | Telegram: webhook + link flow + streaming edits + slash commands | ⬜ pending |
 | P6 | Browser + local LLM: BrowserWidget + headless Browserless + Transformers.js Web Worker | ⬜ pending |

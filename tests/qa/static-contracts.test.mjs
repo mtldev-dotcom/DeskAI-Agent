@@ -62,3 +62,31 @@ test("QA documentation tracks manual P1/P2 coverage", async () => {
   assert.match(qa, /Chat Runtime/);
   assert.match(qa, /Negative Cases/);
 });
+
+test("P3 canvas renders persisted widgets through the builtin renderer registry", async () => {
+  const page = await text("app/(app)/desks/[id]/page.tsx");
+  const canvas = await text("components/canvas/DeskCanvas.tsx");
+  const renderer = await text("components/canvas/WidgetRenderer.tsx");
+
+  assert.match(page, /<DeskCanvas deskId=\{desk\.id\} widgets=\{canvasWidgets\}/);
+  assert.match(canvas, /react-grid-layout/);
+  assert.match(canvas, /draggableHandle="\.widget-drag-handle"/);
+  assert.match(canvas, /\/api\/widgets\/\$\{encodeURIComponent\(widgetId\)\}/);
+  assert.match(renderer, /MarkdownWidget/);
+  assert.match(renderer, /KanbanWidget/);
+  assert.match(renderer, /IframeWidget/);
+});
+
+test("P3 sandbox bridge accepts code.exec dispatch and scoped widget patches", async () => {
+  const bridge = await text("lib/sandbox/iframe-bridge.ts");
+  const iframe = await text("components/widgets/builtin/Iframe.tsx");
+  const chat = await text("components/chat/ChatStream.tsx");
+  const route = await text("app/api/widgets/[id]/route.ts");
+
+  assert.match(bridge, /source: "desksai-sandbox"/);
+  assert.match(bridge, /type !== "exec"/);
+  assert.match(iframe, /sandbox="allow-scripts"/);
+  assert.match(iframe, /desksai:sandbox-exec/);
+  assert.match(chat, /dispatchSandboxExec/);
+  assert.match(route, /eq\(resources\.workspaceId, workspaceId\)/);
+});

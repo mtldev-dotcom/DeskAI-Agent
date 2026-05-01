@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import "react-grid-layout/css/styles.css";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";

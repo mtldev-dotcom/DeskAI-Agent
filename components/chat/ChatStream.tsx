@@ -36,6 +36,22 @@ function shouldRefreshDesk(event: ExecutionCardEvent) {
   );
 }
 
+function dispatchSandboxExec(event: ExecutionCardEvent) {
+  if (event.status !== "done") return;
+  if (typeof event.output !== "object" || event.output === null) return;
+  const output = event.output as { type?: unknown; code?: unknown; widgetInstanceId?: unknown };
+  if (output.type !== "sandbox_exec" || typeof output.code !== "string") return;
+
+  window.dispatchEvent(
+    new CustomEvent("desksai:sandbox-exec", {
+      detail: {
+        code: output.code,
+        widgetInstanceId: typeof output.widgetInstanceId === "string" ? output.widgetInstanceId : null,
+      },
+    })
+  );
+}
+
 export function ChatStream({ deskId }: ChatStreamProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -130,6 +146,9 @@ export function ChatStream({ deskId }: ChatStreamProps) {
 
             if (payload.type === "tool_call" || payload.type === "tool_result") {
               setToolEvents((current) => mergeToolEvent(current, payload));
+              if (payload.type === "tool_result") {
+                dispatchSandboxExec(payload);
+              }
               if (payload.type === "tool_result" && shouldRefreshDesk(payload)) {
                 router.refresh();
               }

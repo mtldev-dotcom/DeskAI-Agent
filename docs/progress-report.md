@@ -8,7 +8,7 @@ Last updated: 2026-05-01
 |---|---|---|
 | P1 — Foundation | ✅ complete | 2026-04-30 |
 | P2 — Chat runtime | ✅ complete | 2026-05-01 |
-| P3 — Agent-built UI | ⬜ pending | — |
+| P3 — Agent-built UI | ✅ complete | 2026-05-01 |
 | P4 — Time travel + sharing | ⬜ pending | — |
 | P5 — Telegram | ⬜ pending | — |
 | P6 — Browser + local LLM | ⬜ pending | — |
@@ -136,3 +136,54 @@ Last updated: 2026-05-01
 - Real widget canvas/renderers and iframe execution (P3)
 - Markdown-to-sanitized-HTML rendering improvements beyond live safe text output
 - Time-travel `resource_versions` writes for agent mutations (P4)
+
+---
+
+## P3 — Agent-built UI
+
+**Completed**: 2026-05-01
+
+### What was built
+
+**Canvas**
+- `components/canvas/DeskCanvas.tsx` — client canvas backed by `react-grid-layout`, with drag/resize handles and persisted layout PATCHes.
+- `components/canvas/WidgetFrame.tsx` — glass widget frame with accessible drag handle, status affordance, and stable header/body sizing.
+- `components/canvas/WidgetRenderer.tsx` — builtin renderer switch for markdown, kanban, browser, code, chart, form, iframe, and custom widgets.
+- `app/(app)/desks/[id]/page.tsx` — replaced placeholder JSON cards with real canvas widgets derived from persisted `widget_instances`.
+
+**Builtin widgets**
+- `components/widgets/builtin/Markdown.tsx` — safe lightweight markdown rendering for headings, bullets, and bold text.
+- `components/widgets/builtin/Kanban.tsx` — column/card renderer for agent-created boards.
+- `components/widgets/builtin/Browser.tsx` — sandboxed iframe browser widget for HTTP(S) URLs.
+- `components/widgets/builtin/Code.tsx` — code viewer with language label.
+- `components/widgets/builtin/Chart.tsx` — dependency-free bar chart renderer.
+- `components/widgets/builtin/Form.tsx` — schema-driven form renderer.
+- `components/widgets/builtin/Iframe.tsx` — custom HTML/JS sandbox renderer.
+
+**Sandbox + persistence**
+- `lib/sandbox/iframe-bridge.ts` — srcdoc builder exposing a minimal `window.DesksAI` API (`desk.read`, `widget.patch`, console proxy) inside `sandbox="allow-scripts"`.
+- `app/api/widgets/[id]/route.ts` — workspace-scoped PATCH/DELETE route for widget props and layout updates.
+- `components/chat/ChatStream.tsx` — dispatches live `code.exec` tool results into matching frontend sandboxes.
+- `lib/types.ts` — shared desk/widget type contracts.
+
+**QA**
+- `tests/qa/static-contracts.test.mjs` — added P3 static contract tests for canvas rendering, builtin registry, sandbox dispatch, and workspace-scoped widget writes.
+
+### Key decisions
+
+- P3 uses a single persisted layout shape (`x/y/w/h`) and stores drag/resize changes through `/api/widgets/[id]`; responsive refinements can layer on without changing the DB contract.
+- Custom widgets run in an iframe with `sandbox="allow-scripts"` and communicate through `postMessage`; parent-side writes still go through the authenticated widget API route.
+- Chart rendering is implemented without adding a charting dependency so P3 stays within the existing package set.
+
+### Verification
+
+- `pnpm lint` — passed
+- `pnpm test:qa` — passed (7 static contract tests)
+- `pnpm test:e2e` — passed (12 public/signed-out UX checks, 2 authenticated-flow TODOs skipped)
+- `pnpm build` — passed; Next still reports the existing middleware-to-proxy deprecation warning
+
+### Deferred to later phases
+
+- Resource version rows for widget mutations and rollback UI (P4)
+- Headless Browserless fallback for sites that block iframe embedding (P6)
+- Rich sanitized markdown rendering beyond the current safe lightweight widget renderer

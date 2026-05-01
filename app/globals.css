@@ -61,6 +61,33 @@ body {
   border: 1px solid var(--glass-border);
 }
 
+.desks-grid-layout {
+  position: relative;
+}
+
+.desks-grid-layout .react-grid-item {
+  transition: transform 180ms ease, width 180ms ease, height 180ms ease;
+}
+
+.desks-grid-layout .react-grid-item.react-grid-placeholder {
+  border-radius: 0.5rem;
+  background: rgba(103, 232, 249, 0.16);
+  border: 1px solid rgba(103, 232, 249, 0.3);
+  opacity: 1;
+}
+
+.desks-grid-layout .react-resizable-handle {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 24px;
+  height: 24px;
+  border-right: 2px solid rgba(255, 255, 255, 0.28);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.28);
+  border-radius: 0 0 0.375rem 0;
+  cursor: se-resize;
+}
+
 /* Scrollbar — subtle on dark bg */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
