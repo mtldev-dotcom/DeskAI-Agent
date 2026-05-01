@@ -9,10 +9,13 @@ import { resources } from "../lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
-const url = process.env.DATABASE_URL;
-if (!url) throw new Error("DATABASE_URL is not set");
+function requireDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) throw new Error("DATABASE_URL is not set");
+  return databaseUrl;
+}
 
-const client = postgres(url, { max: 1 });
+const client = postgres(requireDatabaseUrl(), { max: 1 });
 const db = drizzle(client);
 
 async function upsertL0(

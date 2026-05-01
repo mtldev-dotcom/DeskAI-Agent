@@ -17,7 +17,7 @@ export function AgentOverlay({ deskId }: AgentOverlayProps) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/10 text-[--color-foreground] shadow-lg shadow-black/30 backdrop-blur md:bottom-6"
+        className="fixed bottom-20 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/10 text-[--color-foreground] shadow-lg shadow-black/30 backdrop-blur"
         aria-label="Open agent"
       >
         <MessageSquare size={20} />
@@ -30,7 +30,7 @@ export function AgentOverlay({ deskId }: AgentOverlayProps) {
       initial={{ y: 40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 40, opacity: 0 }}
-      className="fixed inset-x-3 bottom-20 z-40 flex h-[68dvh] flex-col overflow-hidden rounded-xl border border-white/10 bg-[--color-background]/90 shadow-2xl shadow-black/40 backdrop-blur md:inset-x-auto md:bottom-0 md:right-0 md:top-0 md:h-auto md:w-[400px] md:rounded-none md:border-y-0 md:border-r-0"
+      className="fixed inset-x-3 bottom-20 z-50 flex h-[68dvh] flex-col overflow-hidden rounded-xl border border-white/10 bg-[--color-background]/90 shadow-2xl shadow-black/40 backdrop-blur md:inset-x-auto md:bottom-14 md:right-0 md:top-0 md:h-auto md:w-[400px] md:rounded-none md:border-y-0 md:border-r-0"
     >
       <div className="flex min-h-[52px] items-center justify-between border-b border-white/10 px-3">
         <div className="flex items-center gap-2">

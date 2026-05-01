@@ -9,13 +9,24 @@ import { resources } from "../lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
-const url = process.env.DATABASE_URL;
 const workspaceId = process.env.WORKSPACE_ID;
-if (!url) throw new Error("DATABASE_URL is not set");
 if (!workspaceId) throw new Error("WORKSPACE_ID is not set");
 
+function requireDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) throw new Error("DATABASE_URL is not set");
+  return databaseUrl;
+}
+
+function requireWorkspaceId() {
+  const id = process.env.WORKSPACE_ID;
+  if (!id) throw new Error("WORKSPACE_ID is not set");
+  return id;
+}
+
 async function main() {
-const client = postgres(url, { max: 1 });
+const workspaceId = requireWorkspaceId();
+const client = postgres(requireDatabaseUrl(), { max: 1 });
 const db = drizzle(client);
 
 const [template] = await db

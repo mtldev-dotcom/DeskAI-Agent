@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState, useTransition } from "react";
 import { SendHorizontal } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { cn, generateId } from "@/lib/utils";
 import { ExecutionCard, type ExecutionCardEvent } from "./ExecutionCard";
 import { MessageBubble } from "./MessageBubble";
@@ -28,7 +29,15 @@ function mergeToolEvent(events: ExecutionCardEvent[], event: ExecutionCardEvent)
   return events.map((item, itemIndex) => (itemIndex === index ? { ...item, ...event } : item));
 }
 
+function shouldRefreshDesk(event: ExecutionCardEvent) {
+  return (
+    event.status === "done" &&
+    (event.name.startsWith("widget.") || event.name === "desk.patch" || event.name === "desk.create")
+  );
+}
+
 export function ChatStream({ deskId }: ChatStreamProps) {
+  const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [toolEvents, setToolEvents] = useState<ExecutionCardEvent[]>([]);
   const [input, setInput] = useState("");
@@ -38,6 +47,34 @@ export function ChatStream({ deskId }: ChatStreamProps) {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, toolEvents]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadHistory() {
+      const response = await fetch(`/api/chat/history?deskId=${encodeURIComponent(deskId)}`);
+      if (!response.ok) return;
+
+      const history = (await response.json()) as {
+        messages: ChatMessage[];
+        toolEvents: ExecutionCardEvent[];
+      };
+
+      if (!cancelled) {
+        setMessages(history.messages.filter((message) => message.role === "user" || message.role === "assistant"));
+        setToolEvents(
+          history.toolEvents.filter(
+            (event) => event.status === "running" || event.status === "done" || event.status === "error"
+          )
+        );
+      }
+    }
+
+    loadHistory().catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [deskId]);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -93,6 +130,9 @@ export function ChatStream({ deskId }: ChatStreamProps) {
 
             if (payload.type === "tool_call" || payload.type === "tool_result") {
               setToolEvents((current) => mergeToolEvent(current, payload));
+              if (payload.type === "tool_result" && shouldRefreshDesk(payload)) {
+                router.refresh();
+              }
             }
 
             if (payload.type === "error") {
