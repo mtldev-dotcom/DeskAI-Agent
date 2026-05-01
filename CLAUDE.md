@@ -34,10 +34,10 @@ Rule: **If it's not documented, it's not complete.**
 
 | Phase | Scope | Status |
 |---|---|---|
-| P1 | Foundation: NextAuth + Drizzle + workspaces + L0/L1/L2 + onboarding + Desks CRUD + glass shell | ⬜ pending |
+| P1 | Foundation: NextAuth + Drizzle + workspaces + L0/L1/L2 + onboarding + Desks CRUD + glass shell | ✅ complete |
 | P2 | Chat runtime: OpenRouter streaming + runAgent + prompt-builder + skills + memory + execution cards | ✅ complete |
 | P3 | Agent-built UI: widget canvas + builtin widgets + sandboxed iframe + agent tools | ✅ complete |
-| P4 | Time travel + sharing: resource_versions + diff/rollback + ZIP bundle + encrypted shares | ⬜ pending |
+| P4 | Time travel + sharing: resource_versions + diff/rollback + ZIP bundle + encrypted shares | ✅ complete |
 | P5 | Telegram: webhook + link flow + streaming edits + slash commands | ⬜ pending |
 | P6 | Browser + local LLM: BrowserWidget + headless Browserless + Transformers.js Web Worker | ⬜ pending |
 | P7 | PWA + push + admin agent: manifest + SW + web-push + Admin Agent route | ⬜ pending |

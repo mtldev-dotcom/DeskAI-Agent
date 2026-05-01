@@ -2,6 +2,7 @@ import { db } from "@/lib/db/client";
 import { resources } from "@/lib/db/schema";
 import { and, eq, isNull } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
+import { createResourceVersion } from "@/lib/db/versions";
 import type { OpenRouterTool } from "../openrouter-client";
 
 export const skillTools: OpenRouterTool[] = [
@@ -74,7 +75,10 @@ export async function handleSkillTool(
       )
       .limit(1);
 
+    let resourceId: string;
+    
     if (existing[0]) {
+      resourceId = existing[0].id;
       await db
         .update(resources)
         .set({
@@ -82,22 +86,29 @@ export async function handleSkillTool(
           metadata: { placement, when, loaded: "always" },
           updatedAt: new Date(),
         })
-        .where(eq(resources.id, existing[0].id));
-      return { ok: true, action: "updated", name: skillName };
+        .where(eq(resources.id, resourceId));
+    } else {
+      resourceId = generateId();
+      await db.insert(resources).values({
+        id: resourceId,
+        workspaceId,
+        userId,
+        layer: "L2",
+        kind: "skill",
+        name: skillName,
+        content: { body },
+        metadata: { placement, when, loaded: "always" },
+      });
     }
 
-    await db.insert(resources).values({
-      id: generateId(),
-      workspaceId,
-      userId,
-      layer: "L2",
-      kind: "skill",
-      name: skillName,
-      content: { body },
-      metadata: { placement, when, loaded: "always" },
+    // Create version for the skill resource
+    await createResourceVersion({
+      resourceId,
+      authorId: userId,
+      note: existing[0] ? `Skill updated: ${skillName}` : `Skill created: ${skillName}`,
     });
 
-    return { ok: true, action: "created", name: skillName };
+    return { ok: true, action: existing[0] ? "updated" : "created", name: skillName };
   }
 
   throw new Error(`Unknown skill tool: ${name}`);

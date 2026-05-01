@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { resources } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { requireWorkspace } from "@/lib/auth/workspace";
+import { createResourceVersion } from "@/lib/db/versions";
 
 export async function GET(
   _req: NextRequest,
@@ -36,7 +37,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { workspaceId } = await requireWorkspace();
+    const { workspaceId, userId } = await requireWorkspace();
     const { id } = await params;
     const body = await req.json();
 
@@ -61,6 +62,14 @@ export async function PATCH(
       .returning();
 
     if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    // Create version for the desk resource
+    await createResourceVersion({
+      resourceId: id,
+      authorId: userId,
+      note: "Desk updated via API",
+    });
+
     return NextResponse.json(updated);
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 400 });

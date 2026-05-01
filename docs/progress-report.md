@@ -9,7 +9,7 @@ Last updated: 2026-05-01
 | P1 — Foundation | ✅ complete | 2026-04-30 |
 | P2 — Chat runtime | ✅ complete | 2026-05-01 |
 | P3 — Agent-built UI | ✅ complete | 2026-05-01 |
-| P4 — Time travel + sharing | ⬜ pending | — |
+| P4 — Time travel + sharing | ✅ complete | 2026-05-01 |
 | P5 — Telegram | ⬜ pending | — |
 | P6 — Browser + local LLM | ⬜ pending | — |
 | P7 — PWA + push + admin agent | ⬜ pending | — |
@@ -187,3 +187,62 @@ Last updated: 2026-05-01
 - Resource version rows for widget mutations and rollback UI (P4)
 - Headless Browserless fallback for sites that block iframe embedding (P6)
 - Rich sanitized markdown rendering beyond the current safe lightweight widget renderer
+
+---
+
+## P4 — Time travel + sharing ✅
+
+**Completed**: 2026-05-01
+
+### What was built
+
+**Versioning utility**
+- `lib/db/versions.ts` — `createResourceVersion()`, `listResourceVersions()`, `rollbackToVersion()` with transaction safety
+- Automatic diff calculation between current content and previous version
+- Version creation for desk, widget, skill, and memory mutations
+
+**Agent tool version writes**
+- `lib/agent/tools/desk.ts` — version created on desk.create, desk.patch
+- `lib/agent/tools/widget.ts` — version created on widget.add, widget.patch, widget.remove
+- `lib/agent/tools/skill.ts` — version created on skill.write
+- `lib/agent/tools/memory.ts` — version created on memory.write
+
+**API route version writes**
+- `app/api/widgets/[id]/route.ts` — version created on PATCH
+- `app/api/desks/[id]/route.ts` — version created on PATCH
+
+**Version history & rollback API**
+- `app/api/resources/[id]/versions/route.ts` — GET endpoint to list all versions of a resource
+- `app/api/resources/[id]/rollback/route.ts` — POST endpoint to rollback to a specific version
+
+**UI components**
+- `components/history/VersionList.tsx` — client component to display version history with timestamps, author info, and selection
+- Integrated date formatting using native JavaScript `toLocaleString()`
+
+**Sharing & export/import**
+- `lib/sharing/export.ts` — `exportDesk()` function to serialize desk, widgets, and skills into portable JSON format
+- `lib/sharing/import.ts` — `importDesk()` function to import exported data with transaction safety and version creation
+- Support for both creating new desks and updating existing ones
+- Skills are imported only if they don't already exist in the workspace
+
+### Key decisions
+
+- **Automatic diff calculation** — versions store computed diffs between consecutive versions for efficient diff viewing
+- **Transaction safety** — rollback operations use database transactions to ensure atomicity
+- **Resource-agnostic API** — version endpoints work with any resource type (desk, widget, skill, memory) using unified resource_versions table
+- **Workspace isolation** — all operations respect workspace boundaries to prevent cross-tenant data leaks
+- **Import idempotency** — skills are only imported if they don't exist, preventing duplication
+
+### Verification
+
+- **Schema compatibility** — existing `resource_versions` table in schema already defined
+- **Type safety** — all new files use strict TypeScript with proper type definitions
+- **Workspace security** — all API routes use `requireWorkspace()` for authentication and authorization
+
+### Deferred to later phases
+
+- **UI diff viewer** — visual diff comparison between versions (can be added as enhancement)
+- **ZIP bundle export** — compress exported JSON with assets into single file
+- **Encrypted shares** — share exported desks via encrypted links with expiration
+- **Telegram integration** — share desks via Telegram bot (P5)
+- **Admin audit trail** — version history visible to workspace admins across all resources

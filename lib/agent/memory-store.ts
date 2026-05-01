@@ -2,6 +2,7 @@ import { db } from "@/lib/db/client";
 import { resources } from "@/lib/db/schema";
 import { and, eq, isNull } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
+import { createResourceVersion } from "@/lib/db/versions";
 
 interface MemoryContent {
   text: string;
@@ -39,8 +40,9 @@ export async function writeMemory(
   text: string,
   kind: "persistent" | "transient" = "persistent"
 ): Promise<void> {
+  const id = generateId();
   await db.insert(resources).values({
-    id: generateId(),
+    id,
     workspaceId,
     userId,
     layer: "L2",
@@ -49,6 +51,13 @@ export async function writeMemory(
     content: { text, kind, createdAt: new Date().toISOString() },
     metadata: {},
     enabled: true,
+  });
+
+  // Create version for the memory resource
+  await createResourceVersion({
+    resourceId: id,
+    authorId: userId,
+    note: `Memory created: ${kind}`,
   });
 }
 

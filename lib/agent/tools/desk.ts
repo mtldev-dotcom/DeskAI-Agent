@@ -2,6 +2,7 @@ import { db } from "@/lib/db/client";
 import { resources } from "@/lib/db/schema";
 import { and, eq, isNull } from "drizzle-orm";
 import { generateId, slugify } from "@/lib/utils";
+import { createResourceVersion } from "@/lib/db/versions";
 import type { OpenRouterTool } from "../openrouter-client";
 
 export const deskTools: OpenRouterTool[] = [
@@ -82,6 +83,14 @@ export async function handleDeskTool(
         metadata: {},
       })
       .returning();
+
+    // Create initial version
+    await createResourceVersion({
+      resourceId: desk.id,
+      authorId: userId,
+      note: "Desk created",
+    });
+
     return { id: desk.id, name: desk.name, url: `/desks/${desk.id}` };
   }
 
@@ -110,6 +119,13 @@ export async function handleDeskTool(
         updatedAt: new Date(),
       })
       .where(eq(resources.id, deskId));
+
+    // Create version for the update
+    await createResourceVersion({
+      resourceId: deskId,
+      authorId: userId,
+      note: "Desk updated",
+    });
 
     return { ok: true, deskId };
   }

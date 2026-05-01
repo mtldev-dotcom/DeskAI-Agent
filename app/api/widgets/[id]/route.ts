@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { requireWorkspace } from "@/lib/auth/workspace";
 import { db } from "@/lib/db/client";
 import { resources, widgetInstances } from "@/lib/db/schema";
+import { createResourceVersion } from "@/lib/db/versions";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
@@ -26,7 +27,7 @@ async function loadWidgetInWorkspace(widgetId: string, workspaceId: string) {
     )
     .limit(1);
 
-  return row?.widget ?? null;
+  return row ?? null;
 }
 
 export async function PATCH(
@@ -34,22 +35,22 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { workspaceId } = await requireWorkspace();
+    const { workspaceId, userId } = await requireWorkspace();
     const { id } = await params;
-    const widget = await loadWidgetInWorkspace(id, workspaceId);
-    if (!widget) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const row = await loadWidgetInWorkspace(id, workspaceId);
+    if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const body = (await req.json()) as { props?: unknown; layout?: unknown };
     const updates: Partial<typeof widgetInstances.$inferInsert> = { updatedAt: new Date() };
 
     const props = asRecord(body.props);
     if (props) {
-      updates.props = { ...(widget.props as Record<string, unknown>), ...props };
+      updates.props = { ...(row.widget.props as Record<string, unknown>), ...props };
     }
 
     const layout = asRecord(body.layout);
     if (layout) {
-      updates.layout = { ...(widget.layout as Record<string, unknown>), ...layout };
+      updates.layout = { ...(row.widget.layout as Record<string, unknown>), ...layout };
     }
 
     const [updated] = await db
@@ -57,6 +58,13 @@ export async function PATCH(
       .set(updates)
       .where(eq(widgetInstances.id, id))
       .returning();
+
+    // Create version for the desk resource
+    await createResourceVersion({
+      resourceId: row.desk.id,
+      authorId: userId,
+      note: `Widget updated: ${id}`,
+    });
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -69,12 +77,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { workspaceId } = await requireWorkspace();
+    const { workspaceId, userId } = await requireWorkspace();
     const { id } = await params;
-    const widget = await loadWidgetInWorkspace(id, workspaceId);
-    if (!widget) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const row = await loadWidgetInWorkspace(id, workspaceId);
+    if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     await db.delete(widgetInstances).where(eq(widgetInstances.id, id));
+
+    // Create version for the desk resource
+    await createResourceVersion({
+      resourceId: row.desk.id,
+      authorId: userId,
+      note: `Widget deleted: ${id}`,
+    });
+
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 400 });

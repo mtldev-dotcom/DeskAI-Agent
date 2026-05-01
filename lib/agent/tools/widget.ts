@@ -2,6 +2,7 @@ import { db } from "@/lib/db/client";
 import { resources, widgetInstances } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
+import { createResourceVersion } from "@/lib/db/versions";
 import type { OpenRouterTool } from "../openrouter-client";
 
 export const widgetTools: OpenRouterTool[] = [
@@ -127,6 +128,13 @@ export async function handleWidgetTool(
         .update(resources)
         .set({ content: { ...content, widgetIds: [...widgetIds, instanceId] }, updatedAt: new Date() })
         .where(eq(resources.id, String(args.deskId)));
+
+      // Create version for the desk resource
+      await createResourceVersion({
+        resourceId: String(args.deskId),
+        authorId: context.userId,
+        note: `Widget added: ${String(args.name)} (${String(args.type)})`,
+      });
     }
 
     return { widgetInstanceId: instanceId, type: args.type, name: args.name };
@@ -179,6 +187,13 @@ export async function handleWidgetTool(
           updatedAt: new Date(),
         })
         .where(eq(resources.id, String(args.deskId)));
+
+      // Create version for the desk resource
+      await createResourceVersion({
+        resourceId: String(args.deskId),
+        authorId: context.userId,
+        note: `Widget removed: ${args.widgetInstanceId}`,
+      });
     }
 
     return { ok: true };
