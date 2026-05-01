@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { getLocale } from "next-intl/server";
 import "react-grid-layout/css/styles.css";
 import "./globals.css";
 
@@ -22,13 +23,15 @@ export const viewport: Viewport = {
   themeColor: "#0d0d1a",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale().catch(() => "en");
+
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} className="dark">
       <body>{children}</body>
     </html>
   );

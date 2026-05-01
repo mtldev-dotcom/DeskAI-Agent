@@ -1,14 +1,16 @@
-import { notFound, redirect } from "next/navigation";
 import { and, eq, isNull } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
+import { notFound, redirect } from "next/navigation";
 import { AgentOverlay } from "@/components/agent/AgentOverlay";
 import { DeskCanvas } from "@/components/canvas/DeskCanvas";
+import { hasLocale, localizePathname } from "@/i18n/routing";
 import { getCurrentUser } from "@/lib/auth/workspace";
 import { db } from "@/lib/db/client";
 import { resources, widgetInstances } from "@/lib/db/schema";
 import type { DeskWidget, WidgetLayout, WidgetType } from "@/lib/types";
 
 interface DeskPageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -45,10 +47,13 @@ function parseLayout(value: unknown, index: number): WidgetLayout {
 }
 
 export default async function DeskPage({ params }: DeskPageProps) {
-  const { id } = await params;
+  const { id, locale } = await params;
+  const appLocale = hasLocale(locale) ? locale : "en";
+  const t = await getTranslations({ locale: appLocale, namespace: "desks" });
   const user = await getCurrentUser();
-  if (!user) redirect("/sign-in");
-  if (!user?.defaultWorkspaceId) redirect("/onboarding");
+
+  if (!user) redirect(localizePathname(appLocale, "/sign-in"));
+  if (!user.defaultWorkspaceId) redirect(localizePathname(appLocale, "/onboarding"));
 
   const [desk] = await db
     .select()
@@ -65,10 +70,7 @@ export default async function DeskPage({ params }: DeskPageProps) {
 
   if (!desk) notFound();
 
-  const widgets = await db
-    .select()
-    .from(widgetInstances)
-    .where(eq(widgetInstances.deskId, desk.id));
+  const widgets = await db.select().from(widgetInstances).where(eq(widgetInstances.deskId, desk.id));
 
   const canvasWidgets: DeskWidget[] = widgets.map((widget, index) => {
     const props = asRecord(widget.props);
@@ -85,12 +87,12 @@ export default async function DeskPage({ params }: DeskPageProps) {
   });
 
   return (
-    <div className="min-h-dvh px-4 pb-24 pt-5 md:pr-[420px]">
+    <div className="min-h-dvh px-4 pt-5 pb-24 md:pr-[420px]">
       <div className="mx-auto max-w-5xl">
         <div className="mb-5">
           <h1 className="text-2xl font-bold text-[--color-foreground]">{desk.name}</h1>
           <p className="mt-1 text-sm text-[--color-muted-foreground]">
-            {widgets.length} widget{widgets.length !== 1 ? "s" : ""}
+            {t("widgetCount", { count: widgets.length })}
           </p>
         </div>
 

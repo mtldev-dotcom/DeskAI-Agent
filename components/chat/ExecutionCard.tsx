@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle2, ChevronDown, CircleDashed, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 export interface ExecutionCardEvent {
@@ -23,8 +24,11 @@ function formatValue(value: unknown) {
 
 export function ExecutionCard({ event }: ExecutionCardProps) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("agent");
   const Icon =
     event.status === "done" ? CheckCircle2 : event.status === "error" ? XCircle : CircleDashed;
+  const statusLabel =
+    event.status === "done" ? t("toolDone") : event.status === "error" ? t("toolError") : t("toolRunning");
 
   return (
     <div className="rounded-lg border border-white/10 bg-black/25 text-xs text-[--color-foreground]">
@@ -44,12 +48,9 @@ export function ExecutionCard({ event }: ExecutionCardProps) {
         />
         <span className="min-w-0 flex-1 truncate font-mono">{event.name}</span>
         <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] uppercase text-[--color-muted-foreground]">
-          {event.status}
+          {statusLabel}
         </span>
-        <ChevronDown
-          size={14}
-          className={cn("shrink-0 transition-transform", open && "rotate-180")}
-        />
+        <ChevronDown size={14} className={cn("shrink-0 transition-transform", open && "rotate-180")} />
       </button>
 
       {open && (

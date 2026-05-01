@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ChevronRight, User, FileText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronRight, FileText, User } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 interface ResourceVersion {
@@ -30,6 +31,8 @@ export function VersionList({
   const [versions, setVersions] = useState<ResourceVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const locale = useLocale();
+  const t = useTranslations("history");
 
   useEffect(() => {
     async function loadVersions() {
@@ -52,27 +55,19 @@ export function VersionList({
   }, [resourceId]);
 
   if (loading) {
-    return (
-      <div className={cn("p-4 text-center text-gray-500", className)}>
-        Loading history...
-      </div>
-    );
+    return <div className={cn("p-4 text-center text-gray-500", className)}>{t("loading")}</div>;
   }
 
   if (error) {
     return (
       <div className={cn("p-4 text-center text-red-500", className)}>
-        Error: {error}
+        {t("errorPrefix")} {error}
       </div>
     );
   }
 
   if (versions.length === 0) {
-    return (
-      <div className={cn("p-4 text-center text-gray-500", className)}>
-        No version history yet.
-      </div>
-    );
+    return <div className={cn("p-4 text-center text-gray-500", className)}>{t("noVersions")}</div>;
   }
 
   return (
@@ -82,29 +77,21 @@ export function VersionList({
           key={version.id}
           onClick={() => onSelectVersion?.(version)}
           className={cn(
-            "w-full text-left p-3 rounded-lg border transition-colors",
+            "w-full rounded-lg border p-3 text-left transition-colors",
             "hover:bg-white/5 active:bg-white/10",
-            selectedVersionId === version.id
-              ? "border-blue-500 bg-blue-500/10"
-              : "border-white/10"
+            selectedVersionId === version.id ? "border-blue-500 bg-blue-500/10" : "border-white/10"
           )}
         >
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                {version.authorId ? (
-                  <User className="w-4 h-4" />
-                ) : (
-                  <FileText className="w-4 h-4" />
-                )}
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
+                {version.authorId ? <User className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate">
-                {version.note || "Update"}
-              </p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{version.note || t("updateFallback")}</p>
               <p className="text-xs text-gray-400">
-                {new Date(version.createdAt).toLocaleString(undefined, {
+                {new Date(version.createdAt).toLocaleString(locale === "fr" ? "fr-CA" : "en-CA", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
@@ -113,7 +100,7 @@ export function VersionList({
                 })}
               </p>
             </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400" />
           </div>
         </button>
       ))}

@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutGrid, MoreVertical, Trash2 } from "lucide-react";
+import { LayoutGrid, Trash2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { GlassSurface } from "@/components/visual/GlassSurface";
+import { hasLocale, localizePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import type { Resource } from "@/lib/db/schema";
 
@@ -18,6 +20,9 @@ interface DeskCardProps {
 }
 
 export function DeskCard({ desk, onDelete }: DeskCardProps) {
+  const locale = useLocale();
+  const t = useTranslations("desks");
+  const appLocale = hasLocale(locale) ? locale : "en";
   const content = desk.content as DeskContent;
 
   return (
@@ -25,7 +30,11 @@ export function DeskCard({ desk, onDelete }: DeskCardProps) {
       elevated
       className="group relative flex flex-col gap-3 p-4 transition-all hover:border-white/20"
     >
-      <Link href={`/desks/${desk.id}`} className="absolute inset-0 rounded-xl" aria-label={desk.name} />
+      <Link
+        href={localizePathname(appLocale, `/desks/${desk.id}`)}
+        className="absolute inset-0 rounded-xl"
+        aria-label={desk.name}
+      />
 
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
@@ -35,7 +44,7 @@ export function DeskCard({ desk, onDelete }: DeskCardProps) {
           <div className="min-w-0">
             <p className="truncate font-semibold text-sm text-[--color-foreground]">{desk.name}</p>
             <p className="text-xs text-[--color-muted-foreground]">
-              {content.widgetIds?.length ?? 0} widget{(content.widgetIds?.length ?? 0) !== 1 ? "s" : ""}
+              {t("widgetCount", { count: content.widgetIds?.length ?? 0 })}
             </p>
           </div>
         </div>
@@ -52,7 +61,7 @@ export function DeskCard({ desk, onDelete }: DeskCardProps) {
               "transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
               "min-h-[44px] min-w-[44px] -m-1"
             )}
-            aria-label={`Delete ${desk.name}`}
+            aria-label={t("deleteLabel", { name: desk.name })}
           >
             <Trash2 size={15} />
           </button>
@@ -67,7 +76,7 @@ export function DeskCard({ desk, onDelete }: DeskCardProps) {
 
       <div className="flex items-center gap-1.5 text-[10px] text-[--color-muted-foreground]">
         <span className="rounded-full bg-white/5 px-2 py-0.5">
-          {content.model ?? "default model"}
+          {content.model ?? t("defaultModel")}
         </span>
       </div>
     </GlassSurface>

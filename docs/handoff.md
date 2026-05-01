@@ -1,40 +1,36 @@
-# DesksAI — Session Handoff
+# DesksAI - Session Handoff
 
 Last updated: 2026-05-01
 
 ## What happened this session
 
-- Documented ADHD.md and user-flow-tests.md update rules in CLAUDE.md
-- Synced ADHD.md and docs/user-flow-tests.md to full P4 state (versioning, rollback, export/import, all tool surfaces)
-- Planned i18n (English + French) implementation — full plan written to docs/i18n-plan.md
+- Executed the English/French i18n rollout with `next-intl`
+- Moved App Router pages under `app/[locale]/(auth)` and `app/[locale]/(app)`
+- Added `messages/en.json`, `messages/fr.json`, `i18n/request.ts`, `i18n/routing.ts`, and `components/locale/LocaleSwitcher.tsx`
+- Updated middleware to combine locale routing with the existing auth gate
+- Localized auth forms, desks list/detail chrome, bottom nav, agent overlay, execution card status labels, and version history UI
+- Verified `pnpm lint` and `pnpm build`
+- Verified signed-out route behavior for `/`, `/fr`, `/desks`, `/fr/desks`, `/sign-in`, and `/fr/sign-in`
 
 ## Current state
 
-- P1–P4 complete and committed
-- P5–P8 pending
-- No i18n library installed yet — docs/i18n-plan.md is the complete spec for the next session
+- P1-P4 complete
+- English/French UI localization is now implemented
+- English routes are unprefixed; French routes use `/fr/...`
+- Build is clean aside from the Next.js 16 `middleware` -> `proxy` deprecation warning
+- P5-P8 are still pending
 
 ## Exact next steps for next agent session
 
-**Read first (mandatory):**
+Read first:
+
 1. `docs/claude-plan.md`
 2. `docs/progress-report.md`
-3. `docs/handoff.md` (this file)
-4. `docs/i18n-plan.md` ← the full i18n implementation plan, read it completely
+3. `docs/handoff.md`
 
-**Then execute `docs/i18n-plan.md` in order:**
+Then continue from the new baseline:
 
-1. `pnpm add next-intl`
-2. Create `messages/en.json` and `messages/fr.json` (content in plan)
-3. Create `i18n/request.ts` and `i18n/routing.ts` (content in plan)
-4. Edit `next.config.ts` — wrap with `withNextIntl`
-5. Replace `middleware.ts` — chain intl + NextAuth (content in plan)
-6. Restructure app directory: move `(auth)/` and `(app)/` under `app/[locale]/`
-7. Create `app/[locale]/layout.tsx` with `NextIntlClientProvider`
-8. Migrate ~10 components to use `useTranslations` / `getTranslations`
-9. Create `components/locale/LocaleSwitcher.tsx`
-10. Run `pnpm lint` + `pnpm build` + manual browser checks
-11. Update ADHD.md, user-flow-tests.md, progress-report.md, this handoff
-12. Commit: `feat: add i18n — English and French with next-intl`
-
-**Do not start P5 (Telegram) until i18n is complete and verified.**
+1. Decide whether to rename `middleware.ts` to `proxy.ts` to align with Next.js 16 guidance
+2. Run authenticated manual verification for `/desks` and `/fr/desks`, including locale switcher round-trip
+3. Extend translations when new user-visible UI strings are introduced
+4. Start P5 only after the i18n follow-up is accepted

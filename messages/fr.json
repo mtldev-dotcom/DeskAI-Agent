@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "desks": "Bureaux",
+    "chat": "Chat",
+    "skills": "Compétences",
+    "settings": "Paramètres",
+    "mainNavigation": "Navigation principale"
+  },
+  "auth": {
+    "signInHeading": "Se connecter",
+    "signInSubheading": "Utilisez votre compte DesksAI.",
+    "signUpHeading": "S'inscrire",
+    "signUpSubheading": "Créez votre espace de travail.",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "workspace": "Espace de travail",
+    "workspacePlaceholder": "Mon espace",
+    "invalidCredentials": "E-mail ou mot de passe invalide",
+    "couldNotCreate": "Impossible de créer le compte",
+    "signInFailed": "Compte créé, mais la connexion a échoué",
+    "signingIn": "Connexion...",
+    "creating": "Création...",
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "createAccount": "Créer un compte",
+    "noAccount": "Pas de compte ?",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?"
+  },
+  "desks": {
+    "title": "Bureaux",
+    "count": "{count, plural, one {# bureau} other {# bureaux}}",
+    "widgetCount": "{count, plural, one {# widget} other {# widgets}}",
+    "empty": "Aucun bureau. Créez votre premier bureau pour commencer.",
+    "new": "Nouveau bureau",
+    "namePlaceholder": "Nom du bureau...",
+    "create": "Créer",
+    "cancel": "Annuler",
+    "defaultModel": "modèle par défaut",
+    "deleteLabel": "Supprimer {name}"
+  },
+  "agent": {
+    "title": "Agent",
+    "thinking": "Réflexion...",
+    "toolRunning": "En cours",
+    "toolDone": "Terminé",
+    "toolError": "Erreur",
+    "send": "Envoyer",
+    "open": "Ouvrir l'agent",
+    "close": "Fermer l'agent"
+  },
+  "history": {
+    "title": "Historique des versions",
+    "rollback": "Revenir à cette version",
+    "noVersions": "Aucune version pour l'instant.",
+    "loading": "Chargement de l'historique...",
+    "errorPrefix": "Erreur :",
+    "updateFallback": "Mise à jour"
+  },
+  "meta": {
+    "title": "DesksAI",
+    "description": "Votre espace de travail alimenté par l'IA"
+  },
+  "locale": {
+    "switch": "English"
+  }
+}

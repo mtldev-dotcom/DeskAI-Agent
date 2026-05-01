@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { MessageSquare, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ChatStream } from "@/components/chat/ChatStream";
 
 interface AgentOverlayProps {
@@ -11,6 +12,7 @@ interface AgentOverlayProps {
 
 export function AgentOverlay({ deskId }: AgentOverlayProps) {
   const [open, setOpen] = useState(true);
+  const t = useTranslations("agent");
 
   if (!open) {
     return (
@@ -18,7 +20,7 @@ export function AgentOverlay({ deskId }: AgentOverlayProps) {
         type="button"
         onClick={() => setOpen(true)}
         className="fixed bottom-20 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/10 text-[--color-foreground] shadow-lg shadow-black/30 backdrop-blur"
-        aria-label="Open agent"
+        aria-label={t("open")}
       >
         <MessageSquare size={20} />
       </button>
@@ -35,13 +37,13 @@ export function AgentOverlay({ deskId }: AgentOverlayProps) {
       <div className="flex min-h-[52px] items-center justify-between border-b border-white/10 px-3">
         <div className="flex items-center gap-2">
           <MessageSquare size={18} className="text-[--color-brand]" />
-          <h2 className="text-sm font-semibold text-[--color-foreground]">Agent</h2>
+          <h2 className="text-sm font-semibold text-[--color-foreground]">{t("title")}</h2>
         </div>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="flex h-11 w-11 items-center justify-center rounded-lg text-[--color-muted-foreground] hover:bg-white/5 hover:text-[--color-foreground]"
-          aria-label="Close agent"
+          aria-label={t("close")}
         >
           <X size={18} />
         </button>

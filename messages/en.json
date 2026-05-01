@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "desks": "Desks",
+    "chat": "Chat",
+    "skills": "Skills",
+    "settings": "Settings",
+    "mainNavigation": "Main navigation"
+  },
+  "auth": {
+    "signInHeading": "Sign in",
+    "signInSubheading": "Use your DesksAI account.",
+    "signUpHeading": "Sign up",
+    "signUpSubheading": "Create your workspace.",
+    "email": "Email",
+    "password": "Password",
+    "workspace": "Workspace",
+    "workspacePlaceholder": "My Workspace",
+    "invalidCredentials": "Invalid email or password",
+    "couldNotCreate": "Could not create account",
+    "signInFailed": "Account created, but sign-in failed",
+    "signingIn": "Signing in...",
+    "creating": "Creating...",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "createAccount": "Create account",
+    "noAccount": "No account?",
+    "alreadyHaveAccount": "Already have an account?"
+  },
+  "desks": {
+    "title": "Desks",
+    "count": "{count, plural, one {# desk} other {# desks}}",
+    "widgetCount": "{count, plural, one {# widget} other {# widgets}}",
+    "empty": "No desks yet. Create your first desk to get started.",
+    "new": "New Desk",
+    "namePlaceholder": "Desk name...",
+    "create": "Create",
+    "cancel": "Cancel",
+    "defaultModel": "default model",
+    "deleteLabel": "Delete {name}"
+  },
+  "agent": {
+    "title": "Agent",
+    "thinking": "Thinking...",
+    "toolRunning": "Running",
+    "toolDone": "Done",
+    "toolError": "Error",
+    "send": "Send",
+    "open": "Open agent",
+    "close": "Close agent"
+  },
+  "history": {
+    "title": "Version History",
+    "rollback": "Rollback to this version",
+    "noVersions": "No versions yet.",
+    "loading": "Loading history...",
+    "errorPrefix": "Error:",
+    "updateFallback": "Update"
+  },
+  "meta": {
+    "title": "DesksAI",
+    "description": "Your AI-powered workspace"
+  },
+  "locale": {
+    "switch": "Français"
+  }
+}

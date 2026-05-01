@@ -38,18 +38,26 @@ Expected current behavior:
 - Expect JSON with `"ok": true`
 - Visit `/`
 - Expect redirect to `/sign-in`
+- Visit `/fr`
+- Expect redirect to `/fr/sign-in`
 - Visit `/desks` while signed out
 - Expect redirect to `/sign-in`
+- Visit `/fr/desks` while signed out
+- Expect redirect to `/fr/sign-in`
 - Visit `/sign-in`
-- Expect email/password sign-in form
+- Expect English email/password sign-in form
+- Visit `/fr/sign-in`
+- Expect French email/password sign-in form
 - Visit `/sign-up`
-- Expect email/password sign-up form
+- Expect English email/password sign-up form
+- Visit `/fr/sign-up`
+- Expect French email/password sign-up form
 
 ## Flow 2: Sign Up
 
 Steps:
 
-1. Go to `/sign-up`
+1. Go to `/sign-up` or `/fr/sign-up`
 2. Enter a new email address
 3. Enter a password with at least 8 characters
 4. Enter a workspace name or leave it blank
@@ -62,7 +70,7 @@ Expected current behavior:
 - Workspace is created
 - User is added as workspace owner
 - If L0 seed exists, a Welcome desk is created
-- Browser lands on `/desks`
+- Browser lands on `/desks` for English or `/fr/desks` for French
 
 If this fails:
 
@@ -75,40 +83,41 @@ If this fails:
 
 Steps:
 
-1. Go to `/sign-in`
+1. Go to `/sign-in` or `/fr/sign-in`
 2. Enter an existing email and password
 3. Submit the form
 
 Expected current behavior:
 
 - User signs in
-- Browser lands on `/desks`
+- Browser lands on `/desks` for English or `/fr/desks` for French
 - Desk list loads without server errors
 
 Negative check:
 
 - Enter a wrong password
-- Expect visible `Invalid email or password`
+- Expect visible invalid credentials message in the current locale
 
 ## Flow 4: Desks List
 
 Steps:
 
 1. Sign in
-2. Go to `/desks`
+2. Go to `/desks` or `/fr/desks`
 
 Expected current behavior:
 
-- Page title says `Desks`
+- Page title says `Desks` in English and `Bureaux` in French
 - Existing desks appear as cards
 - Each card shows widget count and model badge
-- Bottom nav is visible (Desks / Chat / Skills / Settings)
+- Bottom nav is visible
+- Locale switcher is visible and toggles `/desks` <-> `/fr/desks`
 
 ## Flow 5: Create Desk
 
 Steps:
 
-1. Go to `/desks`
+1. Go to `/desks` or `/fr/desks`
 2. Click create desk button
 3. Enter a desk name
 4. Submit
@@ -117,13 +126,13 @@ Expected current behavior:
 
 - New desk is created
 - New desk card appears in the list
-- Clicking the card opens `/desks/<deskId>`
+- Clicking the card opens `/desks/<deskId>` for English or `/fr/desks/<deskId>` for French
 
-## Flow 6: Desk Detail Page — Canvas
+## Flow 6: Desk Detail Page - Canvas
 
 Steps:
 
-1. Open any desk from `/desks`
+1. Open any desk from `/desks` or `/fr/desks`
 
 Expected current behavior:
 
@@ -143,7 +152,7 @@ Current status:
 - Builtin widget types: markdown, kanban, browser (iframe), code, chart, form, iframe
 - Custom widgets run in sandboxed iframes with `sandbox="allow-scripts"` and postMessage bridge
 
-## Flow 7: Chat Agent — Basic
+## Flow 7: Chat Agent - Basic
 
 Requires:
 
@@ -161,7 +170,7 @@ Expected current behavior:
 - User message appears immediately
 - Assistant response streams into the chat
 
-## Flow 8: Chat Agent — Tool Calls
+## Flow 8: Chat Agent - Tool Calls
 
 Steps:
 
@@ -220,7 +229,7 @@ Current status:
 
 Steps:
 
-1. Open a desk and instruct the agent to make several changes (e.g., add/edit/remove a widget)
+1. Open a desk and instruct the agent to make several changes (for example add, edit, or remove a widget)
 2. Call `GET /api/resources/<resourceId>/versions` or use the `VersionList` component
 
 Expected current behavior:
@@ -232,20 +241,20 @@ Rollback check:
 
 1. `POST /api/resources/<resourceId>/rollback` with `{ versionId: "<id>" }`
 2. Expect resource content to revert to that version
-3. Expect a new version row created for the rollback (append-only — history is never mutated)
+3. Expect a new version row created for the rollback (append-only; history is never mutated)
 
 Current status:
 
 - Version API fully implemented at `/api/resources/[id]/versions` and `/api/resources/[id]/rollback`
 - `VersionList` component exists at `components/history/VersionList.tsx`
-- No rollback UI button on the desk detail page yet — API-only
+- No rollback UI button on the desk detail page yet; API-only
 
 ## Flow 10: Desk Export / Import
 
 Steps:
 
 1. Call `exportDesk(deskId, workspaceId)` from `lib/sharing/export.ts` (or via a test script)
-2. Inspect the JSON — expect `{ version, desk, skills, exportedAt, exportedBy }`
+2. Inspect the JSON; expect `{ version, desk, skills, exportedAt, exportedBy }`
 3. Call `importDesk(exportedJson, workspaceId, userId)` into a different workspace or as a new desk
 
 Expected current behavior:
@@ -259,7 +268,7 @@ Expected current behavior:
 Current status:
 
 - Export and import utilities fully implemented (`lib/sharing/export.ts`, `lib/sharing/import.ts`)
-- No UI entry point yet — callable from server code / scripts only
+- No UI entry point yet; callable from server code or scripts only
 - ZIP bundle and encrypted share links deferred to a later phase
 
 ## Flow 11: Sign Out
@@ -271,11 +280,12 @@ Current status:
 Manual workaround:
 
 - Clear browser cookies for `localhost:3001`
-- Or use browser devtools → Application → Clear Site Data
+- Or use browser devtools -> Application -> Clear Site Data
 
 Expected after clearing session:
 
 - Visiting `/desks` redirects to `/sign-in`
+- Visiting `/fr/desks` redirects to `/fr/sign-in`
 
 ## Automated Checks To Run
 
@@ -297,10 +307,10 @@ pnpm qa:smoke
 ## Known Current Gaps
 
 - No visible sign-out button in the UI
-- No rollback / time-travel UI button on the desk detail page (API exists, no UI control)
+- No rollback or time-travel UI button on the desk detail page
 - No diff viewer for comparing versions visually
 - No ZIP bundle or encrypted share link UI
-- Export/import has no UI entry point — server-side only
+- Export/import has no UI entry point
 - No Telegram bot handler or webhook route (schema ready, P5)
 - No headless Browserless backend (browser tool is a stub, P6)
 - No PWA install prompt, push subscription management, or admin agent route (P7)

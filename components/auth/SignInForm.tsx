@@ -4,10 +4,15 @@ import { FormEvent, useState, useTransition } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { hasLocale, localizePathname } from "@/i18n/routing";
 
 export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const locale = useLocale();
+  const appLocale = hasLocale(locale) ? locale : "en";
+  const t = useTranslations("auth");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -17,7 +22,7 @@ export function SignInForm() {
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email") ?? "");
     const password = String(form.get("password") ?? "");
-    const callbackUrl = searchParams.get("callbackUrl") ?? "/desks";
+    const callbackUrl = searchParams.get("callbackUrl") ?? localizePathname(appLocale, "/desks");
 
     startTransition(async () => {
       const result = await signIn("credentials", {
@@ -28,7 +33,7 @@ export function SignInForm() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        setError(t("invalidCredentials"));
         return;
       }
 
@@ -40,12 +45,12 @@ export function SignInForm() {
   return (
     <form onSubmit={onSubmit} className="glass mx-auto flex w-full max-w-sm flex-col gap-4 rounded-xl p-5">
       <div>
-        <h1 className="text-xl font-semibold text-[--color-foreground]">Sign in</h1>
-        <p className="mt-1 text-sm text-[--color-muted-foreground]">Use your DesksAI account.</p>
+        <h1 className="text-xl font-semibold text-[--color-foreground]">{t("signInHeading")}</h1>
+        <p className="mt-1 text-sm text-[--color-muted-foreground]">{t("signInSubheading")}</p>
       </div>
 
       <label className="flex flex-col gap-1.5 text-sm text-[--color-foreground]">
-        Email
+        {t("email")}
         <input
           name="email"
           type="email"
@@ -56,7 +61,7 @@ export function SignInForm() {
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm text-[--color-foreground]">
-        Password
+        {t("password")}
         <input
           name="password"
           type="password"
@@ -73,13 +78,16 @@ export function SignInForm() {
         disabled={isPending}
         className="min-h-[44px] rounded-lg bg-[--color-brand] px-4 text-sm font-medium text-[--color-brand-foreground] disabled:opacity-60"
       >
-        {isPending ? "Signing in..." : "Sign in"}
+        {isPending ? t("signingIn") : t("signIn")}
       </button>
 
       <p className="text-center text-sm text-[--color-muted-foreground]">
-        No account?{" "}
-        <Link href="/sign-up" className="text-[--color-foreground] underline underline-offset-4">
-          Sign up
+        {t("noAccount")}{" "}
+        <Link
+          href={localizePathname(appLocale, "/sign-up")}
+          className="text-[--color-foreground] underline underline-offset-4"
+        >
+          {t("signUp")}
         </Link>
       </p>
     </form>
