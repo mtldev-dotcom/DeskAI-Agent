@@ -102,7 +102,7 @@ Expected current behavior:
 - Page title says `Desks`
 - Existing desks appear as cards
 - Each card shows widget count and model badge
-- Bottom nav is visible
+- Bottom nav is visible (Desks / Chat / Skills / Settings)
 
 ## Flow 5: Create Desk
 
@@ -116,10 +116,10 @@ Steps:
 Expected current behavior:
 
 - New desk is created
-- New desk card appears
+- New desk card appears in the list
 - Clicking the card opens `/desks/<deskId>`
 
-## Flow 6: Desk Detail Page
+## Flow 6: Desk Detail Page — Canvas
 
 Steps:
 
@@ -129,19 +129,21 @@ Expected current behavior:
 
 - Desk name appears at the top
 - Widget count appears under the title
-- Empty desk shows a placeholder canvas area
+- Draggable/resizable widget canvas renders (backed by react-grid-layout)
+- Each widget shows in a glass frame with a drag handle
+- Empty desk shows an empty canvas area
 - Agent panel is visible
-- On mobile-sized viewport, agent panel behaves like a bottom sheet
-- On desktop-sized viewport, agent panel sits on the right
+- On mobile viewport: agent panel behaves as a bottom sheet
+- On desktop viewport: agent panel sits on the right side
 
 Current status:
 
-- Real draggable widget canvas is implemented (P3)
-- Widget cards are fully functional with drag/resize
-- Builtin widgets: markdown, kanban, browser, code, chart, form, iframe
-- Custom widgets run in sandboxed iframes
+- Real draggable/resizable widget canvas is implemented (P3)
+- Widget layout changes (drag/resize) are persisted via PATCH `/api/widgets/[id]`
+- Builtin widget types: markdown, kanban, browser (iframe), code, chart, form, iframe
+- Custom widgets run in sandboxed iframes with `sandbox="allow-scripts"` and postMessage bridge
 
-## Flow 7: Chat Agent
+## Flow 7: Chat Agent — Basic
 
 Requires:
 
@@ -159,9 +161,11 @@ Expected current behavior:
 - User message appears immediately
 - Assistant response streams into the chat
 
-Tool-call checks:
+## Flow 8: Chat Agent — Tool Calls
 
-Try these prompts:
+Steps:
+
+1. Open a desk and send each prompt below
 
 ```text
 list my desks
@@ -179,7 +183,7 @@ create a desk called QA Manual Test
 Expected:
 
 - Execution card appears for `desk.create`
-- New desk appears after returning to `/desks`
+- New desk appears when returning to `/desks`
 
 ```text
 add a markdown widget to this desk called Notes
@@ -188,27 +192,86 @@ add a markdown widget to this desk called Notes
 Expected:
 
 - Execution card appears for `widget.add`
-- Refreshing the desk page shows a placeholder widget card
+- Widget appears on the canvas after the agent responds
+
+```text
+write a skill called "daily summary" that summarizes the desk contents each morning
+```
+
+Expected:
+
+- Execution card appears for `skill.write`
+
+```text
+remember that I prefer short responses
+```
+
+Expected:
+
+- Execution card appears for `memory.write`
 
 Current status:
 
-- Tool output persists with full time-travel/version history (P4 complete)
-- Versioning API available at `/api/resources/[id]/versions`
-- Rollback API available at `/api/resources/[id]/rollback`
-- Markdown rendering is currently safe text, not rich sanitized HTML
-- `code.exec` tool results are dispatched to matching frontend sandboxes
-- Browser tools are only stubs until P6
+- All four tool surfaces (desk, widget, skill, memory) are fully wired
+- Each tool mutation auto-creates a version row in `resource_versions`
+- Browser and code-exec tools are stubs until P6
 
-## Flow 8: Sign Out
+## Flow 9: Version History
+
+Steps:
+
+1. Open a desk and instruct the agent to make several changes (e.g., add/edit/remove a widget)
+2. Call `GET /api/resources/<resourceId>/versions` or use the `VersionList` component
+
+Expected current behavior:
+
+- Version list returns all past states newest-first
+- Each version has a timestamp, author, and JSON diff from the previous version
+
+Rollback check:
+
+1. `POST /api/resources/<resourceId>/rollback` with `{ versionId: "<id>" }`
+2. Expect resource content to revert to that version
+3. Expect a new version row created for the rollback (append-only — history is never mutated)
 
 Current status:
 
-- A visible sign-out control has not been added to the UI yet.
+- Version API fully implemented at `/api/resources/[id]/versions` and `/api/resources/[id]/rollback`
+- `VersionList` component exists at `components/history/VersionList.tsx`
+- No rollback UI button on the desk detail page yet — API-only
+
+## Flow 10: Desk Export / Import
+
+Steps:
+
+1. Call `exportDesk(deskId, workspaceId)` from `lib/sharing/export.ts` (or via a test script)
+2. Inspect the JSON — expect `{ version, desk, skills, exportedAt, exportedBy }`
+3. Call `importDesk(exportedJson, workspaceId, userId)` into a different workspace or as a new desk
+
+Expected current behavior:
+
+- All desk widgets are included with their props and layout
+- Workspace skills referenced by the desk are bundled
+- Import creates the desk and all widgets transactionally
+- Skills are skipped if a skill with the same name already exists in the target workspace
+- All imported resources have a version row created
+
+Current status:
+
+- Export and import utilities fully implemented (`lib/sharing/export.ts`, `lib/sharing/import.ts`)
+- No UI entry point yet — callable from server code / scripts only
+- ZIP bundle and encrypted share links deferred to a later phase
+
+## Flow 11: Sign Out
+
+Current status:
+
+- No visible sign-out button in the UI yet
 
 Manual workaround:
 
 - Clear browser cookies for `localhost:3001`
-- Or use browser devtools to clear site data
+- Or use browser devtools → Application → Clear Site Data
 
 Expected after clearing session:
 
@@ -233,9 +296,13 @@ pnpm qa:smoke
 
 ## Known Current Gaps
 
-- No visible sign-out button yet
-- Authenticated Playwright flow is scaffolded but skipped
-- No rollback/time-travel UI component integrated into desk detail page
-- ZIP sharing & encrypted hosted shares not implemented
-- No Telegram flow yet
-- No billing/member invite/admin UI yet
+- No visible sign-out button in the UI
+- No rollback / time-travel UI button on the desk detail page (API exists, no UI control)
+- No diff viewer for comparing versions visually
+- No ZIP bundle or encrypted share link UI
+- Export/import has no UI entry point — server-side only
+- No Telegram bot handler or webhook route (schema ready, P5)
+- No headless Browserless backend (browser tool is a stub, P6)
+- No PWA install prompt, push subscription management, or admin agent route (P7)
+- No Stripe webhook handler, billing UI, or member invite flow (P8)
+- Authenticated Playwright e2e flow is scaffolded but skipped

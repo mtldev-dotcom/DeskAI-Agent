@@ -105,3 +105,56 @@ After every phase:
 1. Mark phase ✅ in the table above AND in `docs/progress-report.md`
 2. Add a section to `docs/progress-report.md` — what was built, key decisions, anything deferred
 3. Overwrite `docs/handoff.md` with: what was done this session, current state, exact next steps for next agent session
+4. Update `ADHD.md` — see rules below
+
+---
+
+## ADHD.md update rules
+
+Update `ADHD.md` after every **phase completion** or **significant implementation** (new feature, major refactor, infra change, breaking API change).
+
+### When to update
+
+- Phase marked ✅ — always
+- New agent tool, widget type, or API surface added
+- Auth, DB schema, or infra change
+- Any "gotcha" discovered (env var quirk, port conflict, upstream bug workaround)
+
+### Format rules
+
+`ADHD.md` is a **quick-scan document** — keep every line terse and scannable. Rules:
+
+- **Header:** `# ⚡ DesksAI — ADHD.md` + `> *Last updated: YYYY-MM-DD*`
+- **Emoji section headers** — one emoji per `##` heading, no exceptions
+- **Bullet points only** inside sections — no prose paragraphs
+- **Tables** for tech stacks, APIs, integrations — never inline
+- **Checkboxes** in "What It Will Do" — `[x]` done, `[ ]` pending
+- **Nick's Notes** block at the bottom — one timestamped `> YYYY-MM-DD — ...` line appended per session, never deleted
+- Max ~100 lines total — ruthlessly trim stale bullets when adding new ones
+- No inline code blocks longer than one line; no nested lists deeper than one level
+
+---
+
+## docs/user-flow-tests.md update rules
+
+Update `docs/user-flow-tests.md` after any change that **adds, removes, or alters a user-visible flow** — new pages, new agent tools that change UX, auth changes, widget types, or anything that would make an existing step stale.
+
+### When to update
+
+- Phase marked ✅ that introduces a new route, widget, or agent capability
+- A flow step changes (URL, button label, expected behavior)
+- A known gap is closed — remove it from `## Known Current Gaps`
+- A new gap is discovered — add it to `## Known Current Gaps`
+- `Current status:` notes inside a flow become outdated
+
+### Format rules
+
+- **Header:** `# DesksAI Manual User Flow Tests` + `Last updated: YYYY-MM-DD` (plain text, no emoji)
+- **Flow sections** numbered sequentially: `## Flow N: Title` — add new flows at the end, never renumber existing ones
+- **Each flow** has: `Steps:` (numbered list) → `Expected current behavior:` (bullets) → optional `If this fails:` (bullets) → optional `Current status:` (bullets)
+- **`Current status:`** notes live inside the relevant flow — update in-place, never duplicate across flows
+- **`## Known Current Gaps`** — bullet list at the bottom; remove a bullet the moment the gap is closed, add one the moment a gap is found
+- **`## Automated Checks To Run`** — only update if the actual commands change; do not add commentary
+- Code blocks use triple-backtick with a language hint (`bash`, `text`, `env`)
+- No prose paragraphs — every block is either a list, a table, or a code block
+- Keep steps terse: one action per numbered item, one outcome per bullet
