@@ -1,0 +1,3 @@
+[submodule "docs/space-agent"]
+	path = docs/space-agent
+	url = https://github.com/agent0ai/space-agent.git
