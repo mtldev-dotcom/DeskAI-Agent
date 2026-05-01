@@ -4,20 +4,28 @@ Last updated: 2026-05-01
 
 ## What happened this session
 
-- Executed the English/French i18n rollout with `next-intl`
-- Moved App Router pages under `app/[locale]/(auth)` and `app/[locale]/(app)`
-- Added `messages/en.json`, `messages/fr.json`, `i18n/request.ts`, `i18n/routing.ts`, and `components/locale/LocaleSwitcher.tsx`
-- Updated middleware to combine locale routing with the existing auth gate
-- Localized auth forms, desks list/detail chrome, bottom nav, agent overlay, execution card status labels, and version history UI
-- Verified `pnpm lint` and `pnpm build`
-- Verified signed-out route behavior for `/`, `/fr`, `/desks`, `/fr/desks`, `/sign-in`, and `/fr/sign-in`
+- Confirmed the app still builds cleanly with `pnpm build`
+- Confirmed `pnpm lint` passes after the recent chat UI refactor
+- Reviewed deployment readiness for a VPS smoke test
+- Identified two concrete follow-ups before treating the app as deployment-ready:
+  - `next.config.ts` still hardcodes `serverActions.allowedOrigins` to `localhost:3000`
+  - `tests/qa/static-contracts.test.mjs` still points at the pre-i18n desk page path
+- Refactored the chat panel UI:
+  - stronger overlay shell
+  - improved message bubbles and composer
+  - more compact execution cards
+  - `Agent activity` tool history now stays hidden by default behind an accordion
+- Reduced tool-call visual noise so historical tool events no longer dominate the viewport
 
 ## Current state
 
-- P1-P4 complete
-- English/French UI localization is now implemented
+- P1-P4 are complete
+- English/French localization is implemented
 - English routes are unprefixed; French routes use `/fr/...`
-- Build is clean aside from the Next.js 16 `middleware` -> `proxy` deprecation warning
+- `pnpm build` passes
+- `pnpm lint` passes
+- `pnpm test:qa` is not currently green because one static contract test still references the old non-localized route path
+- Next.js still emits the existing `middleware.ts` to `proxy.ts` deprecation warning during build
 - P5-P8 are still pending
 
 ## Exact next steps for next agent session
@@ -28,9 +36,10 @@ Read first:
 2. `docs/progress-report.md`
 3. `docs/handoff.md`
 
-Then continue from the new baseline:
+Then continue from this baseline:
 
-1. Decide whether to rename `middleware.ts` to `proxy.ts` to align with Next.js 16 guidance
-2. Run authenticated manual verification for `/desks` and `/fr/desks`, including locale switcher round-trip
-3. Extend translations when new user-visible UI strings are introduced
-4. Start P5 only after the i18n follow-up is accepted
+1. Fix `tests/qa/static-contracts.test.mjs` so it targets `app/[locale]/(app)/desks/[id]/page.tsx`, then rerun `pnpm test:qa`
+2. Replace hardcoded `serverActions.allowedOrigins` in `next.config.ts` with a deploy-safe configuration for the real VPS origin
+3. Run a browser verification pass on the updated chat overlay, especially mobile height, bottom composer spacing, and `Agent activity` accordion behavior
+4. Decide whether to rename `middleware.ts` to `proxy.ts` to align with Next.js 16 guidance
+5. Start P5 only after the deployment-readiness cleanup is accepted

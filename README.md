@@ -2,11 +2,12 @@
 
 DesksAI is a Next.js 16 App Router SaaS remake of Space Agent. It uses Postgres, Drizzle, NextAuth credentials auth, OpenRouter streaming, and a mobile-first glass UI.
 
-## Current Status
+## Current status
 
 - P1 Foundation: complete
 - P2 Chat runtime: complete
-- P3 Agent-built UI: pending
+- P3 Agent-built UI: complete
+- P4 Time travel + sharing: complete
 
 Implemented:
 
@@ -16,6 +17,9 @@ Implemented:
 - Desks CRUD
 - OpenRouter streaming runtime
 - Agent tool dispatch and execution cards
+- Widget canvas with persisted widget rendering
+- Localized English/French routing with `next-intl`
+- Version history plumbing and rollback/export-import APIs
 - Public/signed-out Playwright UX tests
 - Static QA contract tests and live smoke tests
 
@@ -78,3 +82,6 @@ pnpm qa:smoke
 - Docker Postgres defaults to host port `5433` to avoid conflicts with other local Postgres containers.
 - `.env.local` is intentionally ignored.
 - The authenticated end-to-end flow is scaffolded but skipped until a disposable test database flow is added.
+- `pnpm build` currently passes, but Next.js still warns that `middleware.ts` should move to `proxy.ts`.
+- `pnpm test:qa` currently needs a small follow-up because one static contract test still points to the pre-i18n desk route path.
+- `next.config.ts` currently hardcodes `serverActions.allowedOrigins` to `localhost:3000`; update this before VPS testing.
