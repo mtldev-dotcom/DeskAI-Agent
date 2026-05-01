@@ -15,12 +15,16 @@ SaaS remake of Space Agent — a mobile-first, multi-tenant platform where AI ag
 - Prompt assembly with skills, memories, and prompt‑includes
 - Basic glass‑theme UI, mobile‑first bottom navigation
 - Docker Postgres, Drizzle ORM, TypeScript stack
+- Agent-built UI canvas with draggable/resizable widgets
+- Time-travel versioning with automatic diff calculation
+- Resource version history and rollback API
+- Desk export/import for sharing
 
 ---
 
 ## 🚀 What It Will Do
-- [ ] Agent‑built UI canvas (widgets, sandboxed renderers)
-- [ ] Time‑travel versioning and rollback
+- [x] Agent‑built UI canvas (widgets, sandboxed renderers)
+- [x] Time‑travel versioning and rollback
 - [ ] ZIP sharing & encrypted hosted shares
 - [ ] Telegram bot bridge with `/start` link flow
 - [ ] In‑app browser widget (iframe + headless)
@@ -80,4 +84,4 @@ The agent is the product — not a chatbot beside it. Users prompt an AI to crea
 ---
 
 ## 🗒️ Nick's Notes
-> 2026‑04‑30 — ADHD.md generated fresh. Project is mid‑build: P1/P2 complete, P3 (agent‑built UI) pending. Reference docs/claude-plan.md for full spec.
+> 2026‑05‑01 — P4 (Time travel + sharing) complete. Versioning utility, agent tool writes, API endpoints, UI components, and export/import implemented. All changes committed and pushed. Next: P5 (Telegram integration). Reference docs/claude-plan.md for full spec.

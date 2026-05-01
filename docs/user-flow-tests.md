@@ -134,10 +134,12 @@ Expected current behavior:
 - On mobile-sized viewport, agent panel behaves like a bottom sheet
 - On desktop-sized viewport, agent panel sits on the right
 
-Current limitation:
+Current status:
 
-- Real draggable widget canvas is not implemented yet
-- Widget cards are placeholders until P3
+- Real draggable widget canvas is implemented (P3)
+- Widget cards are fully functional with drag/resize
+- Builtin widgets: markdown, kanban, browser, code, chart, form, iframe
+- Custom widgets run in sandboxed iframes
 
 ## Flow 7: Chat Agent
 
@@ -188,11 +190,13 @@ Expected:
 - Execution card appears for `widget.add`
 - Refreshing the desk page shows a placeholder widget card
 
-Current limitations:
+Current status:
 
-- Tool output persists, but full time-travel/version history is P4
+- Tool output persists with full time-travel/version history (P4 complete)
+- Versioning API available at `/api/resources/[id]/versions`
+- Rollback API available at `/api/resources/[id]/rollback`
 - Markdown rendering is currently safe text, not rich sanitized HTML
-- `code.exec` is only a stub until P3
+- `code.exec` tool results are dispatched to matching frontend sandboxes
 - Browser tools are only stubs until P6
 
 ## Flow 8: Sign Out
@@ -231,10 +235,7 @@ pnpm qa:smoke
 
 - No visible sign-out button yet
 - Authenticated Playwright flow is scaffolded but skipped
-- No real widget canvas yet
-- No builtin widget rendering yet
-- No sandbox iframe execution yet
-- No rollback/time-travel UI yet
-- No sharing/import/export yet
+- No rollback/time-travel UI component integrated into desk detail page
+- ZIP sharing & encrypted hosted shares not implemented
 - No Telegram flow yet
 - No billing/member invite/admin UI yet
