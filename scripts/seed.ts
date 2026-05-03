@@ -86,11 +86,23 @@ await upsertL0(
 
 1. Think about what widgets are needed
 2. Use desk.create or widget.add tool calls
-3. For custom visualisations, use a sandboxed renderer widget
+3. For custom visualisations, use the iframe widget type (see sandbox API below)
 4. Always confirm the widget name and placement with the user
 5. After building, briefly explain what was created and how to interact with it
 
-Widget types available: markdown, kanban, browser, code, chart, form, iframe`,
+Built-in widget types: markdown, kanban, browser, code, chart, form, iframe, todo, richtext, whiteboard
+
+For interactive custom widgets that don't fit a builtin type, use type "iframe":
+- props.html: the full HTML body markup (no <html>/<body> wrapper, just inner content)
+- props.script: JavaScript that runs in the sandbox context
+
+The sandbox exposes window.DesksAI:
+- DesksAI.props — current persisted props object (read-only)
+- DesksAI.widget.patch(newProps) — merges and persists props, returns Promise
+- DesksAI.desk.read() — returns current desk + widget metadata
+- DesksAI.console.log(...args) — safe logging
+
+Keep iframe widgets self-contained. Use transparent backgrounds. Prefer CSS custom properties for theming.`,
   },
   {
     placement: "system",
@@ -193,6 +205,41 @@ const builtinWidgets = [
       description: "Sandboxed custom HTML/JS renderer",
       defaultProps: { html: "<p>Custom widget</p>", script: "" },
       defaultLayout: { w: 6, h: 6 },
+    },
+  },
+  {
+    name: "todo",
+    content: {
+      type: "todo",
+      label: "Todo List",
+      description: "Interactive checklist with persistent state",
+      defaultProps: {
+        items: [
+          { id: "1", text: "First task", done: false },
+          { id: "2", text: "Second task", done: false },
+        ],
+      },
+      defaultLayout: { w: 6, h: 7 },
+    },
+  },
+  {
+    name: "richtext",
+    content: {
+      type: "richtext",
+      label: "Rich Text",
+      description: "WYSIWYG text editor with auto-save",
+      defaultProps: { html: "<p>Start writing here…</p>" },
+      defaultLayout: { w: 6, h: 7 },
+    },
+  },
+  {
+    name: "whiteboard",
+    content: {
+      type: "whiteboard",
+      label: "Whiteboard",
+      description: "Freehand drawing canvas (tldraw)",
+      defaultProps: { snapshot: null },
+      defaultLayout: { w: 8, h: 10 },
     },
   },
 ];

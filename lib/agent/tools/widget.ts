@@ -17,7 +17,7 @@ export const widgetTools: OpenRouterTool[] = [
           deskId: { type: "string" },
           type: {
             type: "string",
-            enum: ["markdown", "kanban", "browser", "code", "chart", "form", "iframe"],
+            enum: ["markdown", "kanban", "browser", "code", "chart", "form", "iframe", "todo", "richtext", "whiteboard"],
             description: "Widget type",
           },
           name: { type: "string", description: "Human-readable label for this widget instance" },

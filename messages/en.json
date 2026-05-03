@@ -62,5 +62,42 @@
   },
   "locale": {
     "switch": "Français"
+  },
+  "widgetPicker": {
+    "title": "Add Widget",
+    "close": "Close",
+    "add": "Add",
+    "adding": "Adding…",
+    "errorAdding": "Failed to add widget",
+    "categories": {
+      "all": "All",
+      "productivity": "Productivity",
+      "content": "Content",
+      "web": "Web"
+    },
+    "widgets": {
+      "todo": { "label": "Todo List", "description": "Checkboxes with persistent state" },
+      "kanban": { "label": "Kanban Board", "description": "Visual task columns" },
+      "crm": { "label": "CRM Pipeline", "description": "Deal pipeline board" },
+      "markdown": { "label": "Notes", "description": "Freeform markdown notes" },
+      "richtext": { "label": "Rich Text", "description": "WYSIWYG text editor" },
+      "whiteboard": { "label": "Whiteboard", "description": "Freehand drawing canvas" },
+      "code": { "label": "Code Block", "description": "Syntax-highlighted code viewer" },
+      "browser": { "label": "Browser", "description": "Embedded web page" }
+    }
+  },
+  "widgetFrame": {
+    "edit": "Edit",
+    "done": "Done",
+    "delete": "Delete",
+    "confirmDelete": "Delete this widget?",
+    "confirm": "Delete",
+    "cancel": "Cancel",
+    "settings": "Settings"
+  },
+  "canvas": {
+    "addWidget": "Add Widget",
+    "emptyTitle": "No widgets yet",
+    "emptySubtitle": "Add your first widget to get started"
   }
 }

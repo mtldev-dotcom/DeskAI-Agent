@@ -5,3 +5,6 @@ export { FormWidget } from "./Form";
 export { IframeWidget } from "./Iframe";
 export { KanbanWidget } from "./Kanban";
 export { MarkdownWidget } from "./Markdown";
+export { RichTextWidget } from "./RichText";
+export { TodoWidget } from "./Todo";
+export { WhiteboardWidget } from "./Whiteboard";

@@ -62,5 +62,42 @@
   },
   "locale": {
     "switch": "English"
+  },
+  "widgetPicker": {
+    "title": "Ajouter un widget",
+    "close": "Fermer",
+    "add": "Ajouter",
+    "adding": "Ajout…",
+    "errorAdding": "Échec de l'ajout du widget",
+    "categories": {
+      "all": "Tous",
+      "productivity": "Productivité",
+      "content": "Contenu",
+      "web": "Web"
+    },
+    "widgets": {
+      "todo": { "label": "Liste de tâches", "description": "Cases à cocher avec état persistant" },
+      "kanban": { "label": "Tableau Kanban", "description": "Colonnes de tâches visuelles" },
+      "crm": { "label": "Pipeline CRM", "description": "Tableau de pipeline commercial" },
+      "markdown": { "label": "Notes", "description": "Notes en Markdown" },
+      "richtext": { "label": "Texte enrichi", "description": "Éditeur WYSIWYG" },
+      "whiteboard": { "label": "Tableau blanc", "description": "Dessin à main levée" },
+      "code": { "label": "Bloc de code", "description": "Afficheur de code avec coloration" },
+      "browser": { "label": "Navigateur", "description": "Page web intégrée" }
+    }
+  },
+  "widgetFrame": {
+    "edit": "Modifier",
+    "done": "Terminé",
+    "delete": "Supprimer",
+    "confirmDelete": "Supprimer ce widget ?",
+    "confirm": "Supprimer",
+    "cancel": "Annuler",
+    "settings": "Paramètres"
+  },
+  "canvas": {
+    "addWidget": "Ajouter un widget",
+    "emptyTitle": "Aucun widget",
+    "emptySubtitle": "Ajoutez votre premier widget pour commencer"
   }
 }

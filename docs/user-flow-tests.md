@@ -1,6 +1,6 @@
 # DesksAI Manual User Flow Tests
 
-Last updated: 2026-05-01
+Last updated: 2026-05-03
 
 Use this checklist to manually test what currently works in the app. Keep this file updated whenever a flow changes.
 
@@ -149,8 +149,10 @@ Current status:
 
 - Real draggable/resizable widget canvas is implemented (P3)
 - Widget layout changes (drag/resize) are persisted via PATCH `/api/widgets/[id]`
-- Builtin widget types: markdown, kanban, browser (iframe), code, chart, form, iframe
+- Builtin widget types: markdown, kanban, browser (iframe), code, chart, form, iframe, todo, richtext, whiteboard
 - Custom widgets run in sandboxed iframes with `sandbox="allow-scripts"` and postMessage bridge
+- Widget Picker modal available via "Add Widget" button in canvas empty state and FAB
+- WidgetFrame shows edit (pencil), delete (trash), settings (gear) controls per widget type
 
 ## Flow 7: Chat Agent - Basic
 
@@ -287,6 +289,93 @@ Expected after clearing session:
 - Visiting `/desks` redirects to `/sign-in`
 - Visiting `/fr/desks` redirects to `/fr/sign-in`
 
+## Flow 12: Widget Picker — Add Prebuilt Widget
+
+Requires: signed-in user, existing desk
+
+Steps:
+
+1. Open a desk detail page
+2. If the desk is empty: click "Add Widget" in the empty state
+3. If the desk has widgets: click the "Add Widget" button below the grid
+4. Widget Picker modal opens
+5. Verify category tabs: All / Productivity / Content / Web
+6. Click the "Notes" card
+7. Modal closes immediately
+8. Markdown widget appears on the canvas
+
+Expected current behavior:
+
+- Modal is centered on desktop, full-width bottom sheet on mobile
+- Each widget card shows an icon, label, and description
+- Clicking a card POSTs to `/api/widgets` and adds the widget optimistically
+- Widget appears in the canvas grid without page reload
+- On error: widget card shows error state, modal stays open
+
+Repeat for: Todo, Kanban, CRM Pipeline, Rich Text, Whiteboard, Code Block, Browser
+
+## Flow 13: Widget Editing — Inline Edit Mode
+
+Steps:
+
+1. Add a Markdown (Notes) widget via the picker
+2. Click the pencil icon in the widget header
+3. Widget switches to a textarea showing the raw markdown
+4. Edit the content
+5. Click "Done" (or click the pencil again which becomes active/cyan)
+6. Widget returns to display mode with updated content
+7. Reload the page
+8. Verify updated content persists
+
+Expected current behavior:
+
+- Pencil icon is cyan/active while in edit mode
+- Done saves via PATCH `/api/widgets/[id]`
+- Content survives page reload
+
+Repeat for: Kanban (add card to a column), Code (change code and language)
+
+## Flow 14: Todo Widget Interaction
+
+Steps:
+
+1. Add a Todo List widget via the picker
+2. Verify default items appear with checkboxes
+3. Click a checkbox to mark an item done
+4. Verify item gets strikethrough immediately (optimistic)
+5. Reload page
+6. Verify checked state persists
+7. Click pencil to enter edit mode
+8. Type a new task in the input at the bottom, press Enter
+9. Verify new task appears
+10. Click the × on a task to delete it
+11. Reload and verify state
+
+Expected current behavior:
+
+- Checkbox toggles are always interactive (no edit mode needed to check/uncheck)
+- Add/delete tasks only available in edit mode
+- All state persists via PATCH `/api/widgets/[id]`
+
+## Flow 15: Widget Delete
+
+Steps:
+
+1. Open any desk with at least one widget
+2. Click the trash icon in the widget header
+3. Inline confirmation row appears: "Delete this widget? [Delete] [Cancel]"
+4. Click Cancel — widget remains
+5. Click trash again, then Delete
+6. Widget disappears from canvas
+7. Reload page
+8. Verify widget is gone
+
+Expected current behavior:
+
+- DELETE fires to `/api/widgets/[id]`
+- Widget removed optimistically from canvas
+- Version row created for audit trail (rollback via API if needed)
+
 ## Automated Checks To Run
 
 Run these after manual testing:
@@ -307,10 +396,16 @@ pnpm qa:smoke
 ## Known Current Gaps
 
 - No visible sign-out button in the UI
-- No rollback or time-travel UI button on the desk detail page
+- No rollback or time-travel UI button on the desk detail page (API-only)
 - No diff viewer for comparing versions visually
 - No ZIP bundle or encrypted share link UI
 - Export/import has no UI entry point
+- Calendar widget not implemented (deferred to V2)
+- Kanban card drag-reorder between columns not implemented (deferred to V2)
+- Whiteboard widget shows tldraw default UI (no custom toolbar or branding yet)
+- RichText widget has no image upload or link insertion (starter-kit only)
+- `tests/qa/static-contracts.test.mjs` references old non-localized route path (pre-existing, needs fix)
+- `next.config.ts` hardcodes `serverActions.allowedOrigins` to `localhost:3000` (pre-existing, needs fix before VPS deploy)
 - No Telegram bot handler or webhook route (schema ready, P5)
 - No headless Browserless backend (browser tool is a stub, P6)
 - No PWA install prompt, push subscription management, or admin agent route (P7)

@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 function renderInline(text: string) {
   const strongPattern = /\*\*(.*?)\*\*/g;
   const parts: React.ReactNode[] = [];
@@ -19,8 +23,55 @@ function renderInline(text: string) {
   return parts;
 }
 
-export function MarkdownWidget({ content }: { content?: unknown }) {
+async function patchWidget(widgetId: string, content: string) {
+  await fetch(`/api/widgets/${encodeURIComponent(widgetId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ props: { content } }),
+  });
+}
+
+interface MarkdownWidgetProps {
+  content?: unknown;
+  widgetId?: string;
+  isEditing?: boolean;
+  onEditDone?: () => void;
+}
+
+export function MarkdownWidget({ content, widgetId, isEditing, onEditDone }: MarkdownWidgetProps) {
   const source = typeof content === "string" ? content : "";
+  const [draft, setDraft] = useState(source);
+
+  async function handleDone() {
+    if (widgetId) {
+      await patchWidget(widgetId, draft);
+    }
+    onEditDone?.();
+  }
+
+  if (isEditing && widgetId) {
+    return (
+      <div className="flex h-full flex-col gap-2">
+        <textarea
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          className="flex-1 resize-none rounded-md bg-white/5 p-2 font-mono text-xs text-[--color-foreground] placeholder-[--color-muted-foreground] outline-none focus:ring-1 focus:ring-white/20"
+          placeholder="# Title&#10;&#10;Write your notes here…"
+        />
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleDone}
+            className="rounded-md bg-white/10 px-3 py-1.5 text-xs text-[--color-foreground] hover:bg-white/15"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const lines = source.split(/\r?\n/);
 
   return (

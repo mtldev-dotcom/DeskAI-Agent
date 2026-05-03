@@ -7,7 +7,7 @@ export interface WidgetLayout {
   minH?: number;
 }
 
-export type WidgetType = "markdown" | "kanban" | "browser" | "code" | "chart" | "form" | "iframe";
+export type WidgetType = "markdown" | "kanban" | "browser" | "code" | "chart" | "form" | "iframe" | "todo" | "richtext" | "whiteboard";
 
 export interface DeskWidget {
   id: string;
@@ -15,6 +15,12 @@ export interface DeskWidget {
   name: string;
   props: Record<string, unknown>;
   layout: WidgetLayout;
+}
+
+export interface TodoItem {
+  id: string;
+  text: string;
+  done: boolean;
 }
 
 export interface KanbanCard {

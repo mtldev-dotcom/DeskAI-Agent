@@ -1,6 +1,6 @@
 # DesksAI - Progress Report
 
-Last updated: 2026-05-01
+Last updated: 2026-05-03
 
 ## Phase status
 
@@ -10,6 +10,7 @@ Last updated: 2026-05-01
 | P2 - Chat runtime | complete | 2026-05-01 |
 | P3 - Agent-built UI | complete | 2026-05-01 |
 | P4 - Time travel + sharing | complete | 2026-05-01 |
+| P-Widget - V1 prebuilt widget system | complete | 2026-05-03 |
 | P5 - Telegram | pending | - |
 | P6 - Browser + local LLM | pending | - |
 | P7 - PWA + push + admin agent | pending | - |
@@ -125,6 +126,45 @@ Key files:
 - `lib/sharing/export.ts`
 - `lib/sharing/import.ts`
 - `components/history/VersionList.tsx`
+
+## P-Widget - V1 Prebuilt Widget System
+
+Completed: 2026-05-03
+
+Highlights:
+
+- Added Widget Picker modal — users can add prebuilt widgets directly without AI
+- New `POST /api/widgets` route for user-facing widget creation (mirrors agent tool two-write pattern)
+- 3 new interactive widget types: `todo` (optimistic checklist), `richtext` (TipTap WYSIWYG, auto-save 1500ms), `whiteboard` (tldraw v4, auto-save 2000ms on document changes)
+- Inline editing added to existing widgets: markdown (textarea overlay), kanban (inline card add/delete + column title edit), code (textarea + language select)
+- `WidgetFrame` enhanced with pencil (edit), trash (delete with inline confirm), gear (settings) header controls
+- `DeskCanvas` refactored to own widget state locally; floating Add Widget FAB; improved empty state
+- `lib/widgets/defaults.ts` created as single source of truth for all widget type metadata
+- CRM Pipeline exposed as a kanban preset (no new type needed)
+- `lib/types.ts` WidgetType extended with `todo | richtext | whiteboard`
+- Agent `widget.add` enum updated to include new types
+- `scripts/seed.ts` updated with L0 definitions for new types + desk-builder skill with sandbox API docs
+- i18n keys added: `widgetPicker`, `widgetFrame`, `canvas` namespaces in en.json + fr.json
+- New dependencies: `@tiptap/react`, `@tiptap/starter-kit`, `@tldraw/tldraw`
+- `pnpm tsc --noEmit` and `pnpm build` both pass cleanly
+
+Key files:
+
+- `lib/widgets/defaults.ts`
+- `app/api/widgets/route.ts`
+- `components/canvas/WidgetPicker.tsx`
+- `components/canvas/DeskCanvas.tsx`
+- `components/canvas/WidgetFrame.tsx`
+- `components/canvas/WidgetRenderer.tsx`
+- `components/widgets/builtin/Todo.tsx`
+- `components/widgets/builtin/RichText.tsx`
+- `components/widgets/builtin/Whiteboard.tsx`
+
+Deferred to V2:
+
+- Calendar widget (requires date library + external calendar integration)
+- Kanban card drag-reorder between columns (requires dnd-kit)
+- Whiteboard multi-user collaboration
 
 ## Remaining phases
 
