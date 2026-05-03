@@ -1,5 +1,4 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import { AgentOverlay } from "@/components/agent/AgentOverlay";
 import { DeskCanvas } from "@/components/canvas/DeskCanvas";
@@ -26,7 +25,10 @@ function isWidgetType(value: unknown): value is WidgetType {
     value === "code" ||
     value === "chart" ||
     value === "form" ||
-    value === "iframe"
+    value === "iframe" ||
+    value === "todo" ||
+    value === "richtext" ||
+    value === "whiteboard"
   );
 }
 
@@ -49,7 +51,6 @@ function parseLayout(value: unknown, index: number): WidgetLayout {
 export default async function DeskPage({ params }: DeskPageProps) {
   const { id, locale } = await params;
   const appLocale = hasLocale(locale) ? locale : "en";
-  const t = await getTranslations({ locale: appLocale, namespace: "desks" });
   const user = await getCurrentUser();
 
   if (!user) redirect(localizePathname(appLocale, "/sign-in"));
@@ -87,18 +88,8 @@ export default async function DeskPage({ params }: DeskPageProps) {
   });
 
   return (
-    <div className="min-h-dvh px-4 pt-5 pb-24 md:pr-[420px]">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-5">
-          <h1 className="text-2xl font-bold text-[--color-foreground]">{desk.name}</h1>
-          <p className="mt-1 text-sm text-[--color-muted-foreground]">
-            {t("widgetCount", { count: widgets.length })}
-          </p>
-        </div>
-
-        <DeskCanvas deskId={desk.id} widgets={canvasWidgets} />
-      </div>
-
+    <div className="h-dvh overflow-hidden">
+      <DeskCanvas deskId={desk.id} deskName={desk.name} widgets={canvasWidgets} />
       <AgentOverlay deskId={desk.id} />
     </div>
   );

@@ -1,6 +1,6 @@
 # DesksAI Manual User Flow Tests
 
-Last updated: 2026-05-03
+Last updated: 2026-05-04
 
 Use this checklist to manually test what currently works in the app. Keep this file updated whenever a flow changes.
 
@@ -136,22 +136,25 @@ Steps:
 
 Expected current behavior:
 
-- Desk name appears at the top
-- Widget count appears under the title
-- Draggable/resizable widget canvas renders (backed by react-grid-layout)
-- Each widget shows in a glass frame with a drag handle
-- Empty desk shows an empty canvas area
-- Agent panel is visible
+- tldraw infinite whiteboard canvas fills the full viewport
+- Desk name and widget count appear as a floating overlay (top-left)
+- "Add Widget" button floats top-right
+- tldraw drawing toolbar is visible (pen, shapes, text, etc.)
+- Existing widgets appear as draggable/resizable cards on the canvas
+- Scroll wheel zooms in/out; spacebar+drag or middle-mouse pans
+- Single-click selects/drags a widget; double-click enters interactive mode
+- Agent panel is visible (fixed position, works alongside canvas)
 - On mobile viewport: agent panel behaves as a bottom sheet
-- On desktop viewport: agent panel sits on the right side
 
 Current status:
 
-- Real draggable/resizable widget canvas is implemented (P3)
-- Widget layout changes (drag/resize) are persisted via PATCH `/api/widgets/[id]`
+- Canvas replaced with tldraw infinite whiteboard (P-Canvas phase, 2026-05-04)
+- Widget cards are tldraw custom shapes; drag/resize handled natively by tldraw
+- Widget positions persist to DB via PATCH `/api/widgets/[id]` (1s debounce)
+- Drawing tool state persists to localStorage via `persistenceKey="desk-{id}"`
 - Builtin widget types: markdown, kanban, browser (iframe), code, chart, form, iframe, todo, richtext, whiteboard
 - Custom widgets run in sandboxed iframes with `sandbox="allow-scripts"` and postMessage bridge
-- Widget Picker modal available via "Add Widget" button in canvas empty state and FAB
+- Widget Picker modal available via "Add Widget" button in toolbar overlay
 - WidgetFrame shows edit (pencil), delete (trash), settings (gear) controls per widget type
 
 ## Flow 7: Chat Agent - Basic

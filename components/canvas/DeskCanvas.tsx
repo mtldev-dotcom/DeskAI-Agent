@@ -1,143 +1,192 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import GridLayout, { WidthProvider, type Layout } from "react-grid-layout";
-import { Plus, LayoutDashboard } from "lucide-react";
+import { useCallback, useContext, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { createShapeId } from "@tldraw/tldraw";
+import "@tldraw/tldraw/tldraw.css";
+import type { Editor, TLAnyShapeUtilConstructor, TLShapeId } from "@tldraw/tldraw";
 import type { DeskWidget, WidgetLayout } from "@/lib/types";
-import { WidgetFrame } from "./WidgetFrame";
 import { WidgetPicker } from "./WidgetPicker";
+import { CanvasContext, WidgetShapeUtil, type WidgetShape } from "./WidgetShapeUtil";
 
-const ResponsiveGrid = WidthProvider(GridLayout);
+// ─── Lazy tldraw (no SSR) ──────────────────────────────────────────────────
+const Tldraw = dynamic(() => import("@tldraw/tldraw").then((m) => m.Tldraw), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center bg-[--color-background]">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/60" />
+    </div>
+  ),
+});
 
-// Widgets that are always interactive — no separate edit mode toggle needed
-const ALWAYS_INTERACTIVE: Set<string> = new Set(["richtext", "whiteboard", "browser"]);
+// Cast required: TLShape union is closed; WidgetShapeUtil is valid at runtime
+const CUSTOM_SHAPE_UTILS = [WidgetShapeUtil] as unknown as TLAnyShapeUtilConstructor[];
 
-// Widgets that support direct editing via edit mode
-const EDITABLE_TYPES: Set<string> = new Set(["markdown", "kanban", "code", "todo"]);
+// ─── Layout conversion (grid units → pixels on first load) ────────────────
+function convertLayout(layout: WidgetLayout) {
+  // Grid-unit layouts have w ≤ 12 and h ≤ 30 — convert to pixels
+  const isGrid = layout.w <= 12 && layout.h <= 30;
+  return {
+    x: isGrid ? layout.x * 105 : layout.x,
+    y: isGrid ? layout.y * 32 : layout.y,
+    w: isGrid ? Math.max(280, layout.w * 105) : Math.max(280, layout.w),
+    h: isGrid ? Math.max(180, layout.h * 32) : Math.max(180, layout.h),
+  };
+}
 
-interface DeskCanvasProps {
+function widgetShapeId(widgetId: string): TLShapeId {
+  return createShapeId(widgetId);
+}
+
+// ─── Toolbar overlay rendered inside tldraw via InFrontOfTheCanvas ─────────
+function CanvasToolbar() {
+  const { setShowPicker, deskName, widgetCount } = useContext(CanvasContext);
+  const t = useTranslations("canvas");
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-[200] flex items-start justify-between p-3">
+      <div className="pointer-events-none select-none">
+        <h1 className="text-base font-semibold text-white/80 drop-shadow-sm">{deskName}</h1>
+        <p className="text-[11px] text-white/40">
+          {widgetCount} {widgetCount === 1 ? "widget" : "widgets"}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={() => setShowPicker(true)}
+        className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-white/15 bg-black/55 px-3 py-2 text-sm font-medium text-white/85 shadow-lg shadow-black/30 backdrop-blur-sm hover:bg-black/70 hover:text-white transition-colors"
+      >
+        <Plus size={14} />
+        {t("addWidget")}
+      </button>
+    </div>
+  );
+}
+
+// ─── Props ─────────────────────────────────────────────────────────────────
+export interface DeskCanvasProps {
   deskId: string;
+  deskName: string;
   widgets: DeskWidget[];
 }
 
-function toGridLayout(widget: DeskWidget, index: number): Layout {
-  const layout = widget.layout;
-  return {
-    i: widget.id,
-    x: Number.isFinite(layout.x) ? layout.x : 0,
-    y: Number.isFinite(layout.y) ? layout.y : index * 6,
-    w: Number.isFinite(layout.w) ? Math.max(2, Math.min(layout.w, 12)) : 6,
-    h: Number.isFinite(layout.h) ? Math.max(3, layout.h) : 5,
-    minW: layout.minW ?? 2,
-    minH: layout.minH ?? 3,
-  };
-}
-
-function toWidgetLayout(item: Layout): WidgetLayout {
-  return {
-    x: item.x,
-    y: item.y,
-    w: item.w,
-    h: item.h,
-    ...(item.minW ? { minW: item.minW } : {}),
-    ...(item.minH ? { minH: item.minH } : {}),
-  };
-}
-
-async function persistLayout(widgetId: string, layout: WidgetLayout) {
-  await fetch(`/api/widgets/${encodeURIComponent(widgetId)}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ layout }),
-  });
-}
-
-async function deleteWidget(widgetId: string) {
-  await fetch(`/api/widgets/${encodeURIComponent(widgetId)}`, { method: "DELETE" });
-}
-
-export function DeskCanvas({ deskId, widgets: initialWidgets }: DeskCanvasProps) {
-  const t = useTranslations("canvas");
+// ─── Main component ────────────────────────────────────────────────────────
+export function DeskCanvas({ deskId, deskName, widgets: initialWidgets }: DeskCanvasProps) {
   const [widgetsList, setWidgetsList] = useState<DeskWidget[]>(initialWidgets);
-  const [layout, setLayout] = useState<Layout[]>(() => initialWidgets.map(toGridLayout));
-  const [savingIds, setSavingIds] = useState<Set<string>>(() => new Set());
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
   const [showPicker, setShowPicker] = useState(false);
-  const latestLayout = useRef(layout);
+  const editorRef = useRef<Editor | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const widgetsById = useMemo(() => new Map(widgetsList.map((w) => [w.id, w])), [widgetsList]);
+  // ─── Mount: sync DB widgets → tldraw shapes ──────────────────────────────
+  const handleMount = useCallback(
+    (editor: Editor) => {
+      editorRef.current = editor;
 
-  const markSaving = useCallback((ids: string[], saving: boolean) => {
-    setSavingIds((current) => {
-      const next = new Set(current);
-      for (const id of ids) {
-        if (saving) next.add(id);
-        else next.delete(id);
+      // Collect which widget IDs should exist as shapes
+      const expectedIds = new Set(widgetsList.map((w) => widgetShapeId(w.id)));
+
+      // Remove orphaned shapes (e.g. previously persisted, now deleted from DB)
+      const allShapes = editor.getCurrentPageShapes() as unknown as WidgetShape[];
+      const orphans = allShapes
+        .filter((s) => s.type === "widget" && !expectedIds.has(s.id as TLShapeId))
+        .map((s) => s.id as TLShapeId);
+      if (orphans.length) editor.deleteShapes(orphans);
+
+      // Create missing shapes
+      const missing = widgetsList.filter((w) => !editor.getShape(widgetShapeId(w.id)));
+      if (missing.length) {
+        const newShapes = missing.map((widget) => {
+          const { x, y, w, h } = convertLayout(widget.layout);
+          return { id: widgetShapeId(widget.id), type: "widget" as const, x, y, props: { w, h, widget } };
+        });
+        // Cast required: tldraw's createShapes union only includes built-in shape types
+        editor.createShapes(newShapes as unknown as Parameters<typeof editor.createShapes>[0]);
       }
-      return next;
-    });
-  }, []);
 
-  const saveLayout = useCallback(
-    async (nextLayout: Layout[]) => {
-      const changed = nextLayout.filter((item) => {
-        const previous = latestLayout.current.find((current) => current.i === item.i);
-        return (
-          previous &&
-          (previous.x !== item.x || previous.y !== item.y || previous.w !== item.w || previous.h !== item.h)
-        );
-      });
+      // Persist position/size changes to DB with 1 s debounce
+      editor.store.listen(
+        () => {
+          if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+          saveTimerRef.current = setTimeout(() => {
+            const shapes = (editor.getCurrentPageShapes() as unknown as WidgetShape[]).filter(
+              (s) => s.type === "widget"
+            );
 
-      if (!changed.length) return;
-      latestLayout.current = nextLayout;
-      setLayout(nextLayout);
-      markSaving(changed.map((item) => item.i), true);
-
-      await Promise.all(changed.map((item) => persistLayout(item.i, toWidgetLayout(item))));
-      markSaving(changed.map((item) => item.i), false);
+            for (const shape of shapes) {
+              fetch(`/api/widgets/${encodeURIComponent(shape.props.widget.id)}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  layout: { x: shape.x, y: shape.y, w: shape.props.w, h: shape.props.h },
+                }),
+              }).catch(() => {});
+            }
+          }, 1000);
+        },
+        { source: "user", scope: "document" }
+      );
     },
-    [markSaving]
+    // initialWidgets reference is stable for a given page load
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
-  function handleAddWidget(widget: DeskWidget) {
-    const gridItem = toGridLayout(widget, widgetsList.length);
+  // ─── Add widget (from picker) ────────────────────────────────────────────
+  const handleAddWidget = useCallback((widget: DeskWidget) => {
     setWidgetsList((prev) => [...prev, widget]);
-    setLayout((prev) => [...prev, gridItem]);
-    latestLayout.current = [...latestLayout.current, gridItem];
-  }
 
-  function handleDeleteWidget(widgetId: string) {
-    // Optimistic removal
-    setWidgetsList((prev) => prev.filter((w) => w.id !== widgetId));
-    setLayout((prev) => prev.filter((item) => item.i !== widgetId));
-    latestLayout.current = latestLayout.current.filter((item) => item.i !== widgetId);
-    if (editingWidgetId === widgetId) setEditingWidgetId(null);
+    const editor = editorRef.current;
+    if (!editor) return;
 
-    deleteWidget(widgetId).catch(() => {
-      // On error, re-fetch would be ideal; for now silently fail
-      // (version history allows recovery)
-    });
-  }
+    const bounds = editor.getViewportPageBounds();
+    const cx = bounds.x + bounds.w / 2;
+    const cy = bounds.y + bounds.h / 2;
+    const { w, h } = convertLayout(widget.layout);
 
-  if (!widgetsList.length) {
-    return (
-      <>
-        <div className="glass flex min-h-80 flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-white/10 bg-white/[0.03]">
-          <LayoutDashboard size={32} className="text-[--color-muted-foreground] opacity-40" aria-hidden />
-          <div className="text-center">
-            <p className="text-sm font-medium text-[--color-foreground]">{t("emptyTitle")}</p>
-            <p className="mt-1 text-xs text-[--color-muted-foreground]">{t("emptySubtitle")}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowPicker(true)}
-            className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-[--color-foreground] hover:bg-white/10 transition-colors"
-          >
-            <Plus size={15} />
-            {t("addWidget")}
-          </button>
-        </div>
+    const newShape = { id: widgetShapeId(widget.id), type: "widget" as const, x: cx - w / 2, y: cy - h / 2, props: { w, h, widget } };
+    editor.createShape(newShape as unknown as Parameters<typeof editor.createShape>[0]);
+  }, []);
+
+  // ─── Delete widget ───────────────────────────────────────────────────────
+  const handleDeleteWidget = useCallback(
+    (widgetId: string) => {
+      setWidgetsList((prev) => prev.filter((w) => w.id !== widgetId));
+      if (editingWidgetId === widgetId) setEditingWidgetId(null);
+
+      const editor = editorRef.current;
+      if (editor) editor.deleteShapes([widgetShapeId(widgetId)]);
+
+      fetch(`/api/widgets/${encodeURIComponent(widgetId)}`, { method: "DELETE" }).catch(() => {});
+    },
+    [editingWidgetId]
+  );
+
+  const contextValue = useMemo<import("./WidgetShapeUtil").CanvasContextValue>(
+    () => ({
+      deleteWidget: handleDeleteWidget,
+      editingWidgetId,
+      setEditingWidgetId,
+      showPicker,
+      setShowPicker,
+      deskName,
+      widgetCount: widgetsList.length,
+    }),
+    [handleDeleteWidget, editingWidgetId, showPicker, deskName, widgetsList.length]
+  );
+
+  return (
+    <CanvasContext.Provider value={contextValue}>
+      <div className="relative h-full w-full">
+        <Tldraw
+          persistenceKey={`desk-${deskId}`}
+          shapeUtils={CUSTOM_SHAPE_UTILS}
+          onMount={handleMount}
+          components={{
+            InFrontOfTheCanvas: CanvasToolbar,
+          }}
+        />
 
         {showPicker && (
           <WidgetPicker
@@ -146,71 +195,7 @@ export function DeskCanvas({ deskId, widgets: initialWidgets }: DeskCanvasProps)
             onClose={() => setShowPicker(false)}
           />
         )}
-      </>
-    );
-  }
-
-  return (
-    <>
-      <div data-desk-id={deskId} className="relative min-h-0">
-        <ResponsiveGrid
-          className="desks-grid-layout"
-          layout={layout}
-          cols={12}
-          rowHeight={32}
-          margin={[12, 12]}
-          containerPadding={[0, 0]}
-          draggableHandle=".widget-drag-handle"
-          isBounded
-          resizeHandles={["se"]}
-          onLayoutChange={(nextLayout) => setLayout(nextLayout)}
-          onDragStop={(nextLayout) => {
-            saveLayout(nextLayout).catch(() => markSaving(nextLayout.map((item) => item.i), false));
-          }}
-          onResizeStop={(nextLayout) => {
-            saveLayout(nextLayout).catch(() => markSaving(nextLayout.map((item) => item.i), false));
-          }}
-        >
-          {layout.map((item) => {
-            const widget = widgetsById.get(item.i);
-            if (!widget) return null;
-            const isEditing = editingWidgetId === widget.id;
-            const showEditBtn = EDITABLE_TYPES.has(widget.type);
-            return (
-              <div key={item.i} className="min-h-0">
-                <WidgetFrame
-                  widget={widget}
-                  saving={savingIds.has(item.i)}
-                  isEditing={isEditing}
-                  onEdit={showEditBtn ? () => setEditingWidgetId(widget.id) : undefined}
-                  onEditDone={() => setEditingWidgetId(null)}
-                  onDelete={() => handleDeleteWidget(widget.id)}
-                />
-              </div>
-            );
-          })}
-        </ResponsiveGrid>
-
-        {/* Floating Add Widget button */}
-        <div className="mt-4 flex justify-start">
-          <button
-            type="button"
-            onClick={() => setShowPicker(true)}
-            className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-[--color-muted-foreground] hover:bg-white/[0.07] hover:text-[--color-foreground] transition-colors"
-          >
-            <Plus size={14} />
-            {t("addWidget")}
-          </button>
-        </div>
       </div>
-
-      {showPicker && (
-        <WidgetPicker
-          deskId={deskId}
-          onAdd={handleAddWidget}
-          onClose={() => setShowPicker(false)}
-        />
-      )}
-    </>
+    </CanvasContext.Provider>
   );
 }

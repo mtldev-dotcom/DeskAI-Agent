@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useRef } from "react";
 import type { Editor, TLEditorSnapshot } from "@tldraw/tldraw";
-import "@tldraw/tldraw/tldraw.css";
 
 interface WhiteboardWidgetProps {
   widgetId: string;

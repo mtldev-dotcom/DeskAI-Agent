@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { GripVertical, Maximize2, Pencil, Settings2, Trash2, X, Check } from "lucide-react";
+import { GripVertical, Pencil, Settings2, Trash2, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DeskWidget } from "@/lib/types";
 import { WidgetRenderer } from "./WidgetRenderer";
 
 interface WidgetFrameProps {
   widget: DeskWidget;
-  saving?: boolean;
   isEditing?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -16,7 +15,7 @@ interface WidgetFrameProps {
   onEditDone?: () => void;
 }
 
-export function WidgetFrame({ widget, saving, isEditing, onEdit, onDelete, onSettings, onEditDone }: WidgetFrameProps) {
+export function WidgetFrame({ widget, isEditing, onEdit, onDelete, onSettings, onEditDone }: WidgetFrameProps) {
   const [confirming, setConfirming] = useState(false);
 
   function handleDeleteClick() {
@@ -34,7 +33,7 @@ export function WidgetFrame({ widget, saving, isEditing, onEdit, onDelete, onSet
 
   return (
     <article className="glass flex h-full min-h-0 flex-col overflow-hidden rounded-lg shadow-lg shadow-black/10">
-      <header className="widget-drag-handle flex min-h-11 cursor-grab items-center gap-1 border-b border-white/10 px-2 active:cursor-grabbing">
+      <header className="flex min-h-11 items-center gap-1 border-b border-white/10 px-2">
         <button
           type="button"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[--color-muted-foreground]"
@@ -113,16 +112,6 @@ export function WidgetFrame({ widget, saving, isEditing, onEdit, onDelete, onSet
                 <Trash2 size={14} />
               </button>
             )}
-            <div
-              className={cn(
-                "flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[--color-muted-foreground]",
-                saving && "text-cyan-200"
-              )}
-              title={saving ? "Saving" : "Resizable"}
-              aria-label={saving ? "Saving widget" : "Widget can be resized"}
-            >
-              <Maximize2 size={15} />
-            </div>
           </div>
         )}
       </header>
